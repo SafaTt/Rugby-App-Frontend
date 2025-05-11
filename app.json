@@ -7,6 +7,8 @@
     "scheme": "rugbyapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "icon": "./assets/images/ball.jpg",
+
     "ios": {
       "supportsTablet": true
     },
