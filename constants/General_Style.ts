@@ -29,7 +29,6 @@ export const General_Style = StyleSheet.create({
     fontSize: 15,
     color: Colors.gray,
     top: height * 0.015,
-    left: width * 0.025,
   },
   input: {
     height: 50,
@@ -72,14 +71,29 @@ export const General_Style = StyleSheet.create({
     justifyContent: "center",
     marginTop: 30,
   },
-  checkbox: {
-  },
+  checkbox: {},
   checkboxViewContainer: {
     margin: 5,
     flexDirection: "row",
     justifyContent: "space-between",
   },
-   checkboxText: {
+  checkboxText: {
     fontSize: 15,
+  },
+  menuItemBtn: {
+    margin: 5,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 8,
+  },
+  menuItemText: {
+    color: "#fff",
+    fontSize: 18,
+    left: width * 0.02,
+  },
+  viewLine: {
+    borderWidth: 0.5,
+    width: "100%",
+    borderColor: "#fff",
   },
 });

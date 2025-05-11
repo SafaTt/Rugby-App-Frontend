@@ -22,7 +22,8 @@ const SignIn = () => {
   }, [navigation]);
 
   const handleLogin = () => {
-    console.log("data", email, password);
+    // console.log("data", email, password);
+    router.push("../(drawer)/home");
   };
   useEffect(() => {
     navigation.setOptions({
@@ -41,7 +42,9 @@ const SignIn = () => {
           />
 
           <Text style={General_Style.title}> Welcome Back,</Text>
-          <Text style={General_Style.lightText}>Sign in to continue</Text>
+          <Text style={[General_Style.lightText, { left: 10 }]}>
+            Sign in to continue
+          </Text>
         </View>
         {/* Email input */}
         <View style={General_Style.inputsViewContainer}>
@@ -86,13 +89,13 @@ const SignIn = () => {
               <Text
                 style={[
                   General_Style.lightText,
-                  { top: 0, color: Colors.gray },
+                  { top: 0, color: Colors.gray, left: 5 },
                 ]}
               >
                 Remember me
               </Text>
             </View>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("./forgotPassword")}>
               <Text style={General_Style.forgotPasswordText}>
                 Forgot password?
               </Text>

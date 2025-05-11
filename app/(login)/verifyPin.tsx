@@ -5,9 +5,9 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
-const ForgotPassword = () => {
+const VerifyPin = () => {
   const navigation = useNavigation();
-  const [email, setEmail] = useState("");
+  const [pin, setPin] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -17,27 +17,27 @@ const ForgotPassword = () => {
     });
   }, [navigation]);
 
-  const handleForgotPassword = () => {
-    if (!email || !validateEmail(email)) {
-      setErrorMessage("Please enter a valid email address.");
+  const handleVerifyPin = () => {
+    if (pin.length !== 6) {
+      // Assuming the PIN is 6 digits
+      setErrorMessage("The PIN must be 6 digits.");
       return;
     }
 
     setIsLoading(true);
     setErrorMessage("");
 
-    // Simulate an API call to send the code
+    // Simulate API call to verify the PIN
     setTimeout(() => {
-      // Assuming the API returns successfully
-      setIsLoading(false);
-      alert("A PIN code has been sent to your email.");
-      router.push("/verifyPin"); // Redirect to the PIN verification screen (you need to implement it)
-    }, 500);
-  };
-
-  const validateEmail = (email: any) => {
-    const regex = /\S+@\S+\.\S+/;
-    return regex.test(email);
+      if (pin.length === 6) {
+        // Simulate success
+        setIsLoading(false);
+        router.push("/resetPwd"); // Redirect to the reset password screen
+      } else {
+        setIsLoading(false);
+        setErrorMessage("Invalid PIN. Please try again.");
+      }
+    }, 1000);
   };
 
   return (
@@ -49,20 +49,21 @@ const ForgotPassword = () => {
             source={require("../../assets/images/generals/rugby-ball.png")}
             style={General_Style.rugbyLogo}
           />
-          <Text style={General_Style.title}>Forgot Password?</Text>
+          <Text style={General_Style.title}>Enter the PIN</Text>
           <Text style={General_Style.lightText}>
-            Enter your email address to receive a PIN code for verification.
+            Please enter the 6-digit PIN sent to your email address.
           </Text>
         </View>
 
-        {/* Email input */}
+        {/* PIN input */}
         <View style={General_Style.inputsViewContainer}>
           <TextInput
             style={General_Style.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
+            placeholder="PIN"
+            value={pin}
+            onChangeText={setPin}
+            keyboardType="numeric"
+            maxLength={6}
           />
 
           {/* Error message */}
@@ -70,14 +71,14 @@ const ForgotPassword = () => {
             <Text style={{ color: "red", marginTop: 5 }}>{errorMessage}</Text>
           ) : null}
 
-          {/* Send mail button */}
+          {/* Verify PIN button */}
           <TouchableOpacity
             style={General_Style.loginButton}
-            onPress={handleForgotPassword}
+            onPress={handleVerifyPin}
             disabled={isLoading}
           >
             <Text style={General_Style.loginButtonText}>
-              {isLoading ? "Sending..." : "Send mail"}
+              {isLoading ? "Verifying..." : "Verify PIN"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -86,4 +87,4 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword;
+export default VerifyPin;

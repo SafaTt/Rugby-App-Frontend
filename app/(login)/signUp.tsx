@@ -136,7 +136,7 @@ const SignUp = () => {
             {/* Signin link */}
             <View style={General_Style.newPlayerView}>
               <Text style={{ color: Colors.gray }}>Already a player? </Text>
-              <TouchableOpacity onPress={() => router.push("./signIn")}>
+              <TouchableOpacity onPress={() => router.push("../(drawer)/home")}>
                 <Text style={{ color: Colors.primary, fontWeight: "bold" }}>
                   signin
                 </Text>
