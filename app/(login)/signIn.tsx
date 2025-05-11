@@ -1,6 +1,7 @@
 import { Colors } from "@/constants/Colors";
 import { General_Style } from "@/constants/General_Style";
 import { FontAwesome } from "@expo/vector-icons";
+import Checkbox from "expo-checkbox";
 import { Image } from "expo-image";
 import { router, useNavigation } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -74,11 +75,29 @@ const SignIn = () => {
           </View>
 
           {/* Forgot Password link */}
-          <TouchableOpacity>
-            <Text style={General_Style.forgotPasswordText}>
-              Forgot password?
-            </Text>
-          </TouchableOpacity>
+          <View style={General_Style.checkboxViewContainer}>
+            <View style={{ flexDirection: "row" }}>
+              <Checkbox
+                style={General_Style.checkbox}
+                value={isChecked}
+                onValueChange={setChecked}
+                color={isChecked ? Colors.primary : undefined}
+              />
+              <Text
+                style={[
+                  General_Style.lightText,
+                  { top: 0, color: Colors.gray },
+                ]}
+              >
+                Remember me
+              </Text>
+            </View>
+            <TouchableOpacity>
+              <Text style={General_Style.forgotPasswordText}>
+                Forgot password?
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Login button */}
           <TouchableOpacity

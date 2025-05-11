@@ -50,8 +50,6 @@ export const General_Style = StyleSheet.create({
   forgotPasswordText: {
     textAlign: "right",
     color: Colors.gray,
-    marginBottom: 20,
-    top: height * 0.02,
   },
   loginButton: {
     backgroundColor: Colors.primary,
@@ -73,5 +71,15 @@ export const General_Style = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 30,
+  },
+  checkbox: {
+  },
+  checkboxViewContainer: {
+    margin: 5,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+   checkboxText: {
+    fontSize: 15,
   },
 });
