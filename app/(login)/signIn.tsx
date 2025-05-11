@@ -21,7 +21,6 @@ const SignIn = () => {
   }, [navigation]);
 
   const handleLogin = () => {
-    // Logique de connexion ici
     console.log("data", email, password);
   };
   useEffect(() => {
@@ -34,13 +33,15 @@ const SignIn = () => {
     <View style={General_Style.container}>
       <StatusBar style="dark" translucent backgroundColor="transparent" />
       <View style={General_Style.dataViewAuth}>
-        <Image
-          source={require("../../assets/images/generals/rugby-ball.png")}
-          style={General_Style.rugbyLogo}
-        />
+        <View style={{ alignSelf: "flex-start" }}>
+          <Image
+            source={require("../../assets/images/generals/rugby-ball.png")}
+            style={General_Style.rugbyLogo}
+          />
 
-        <Text style={General_Style.title}> Welcome Back,</Text>
-        <Text style={General_Style.lightText}>Sign in to continue</Text>
+          <Text style={General_Style.title}> Welcome Back,</Text>
+          <Text style={General_Style.lightText}>Sign in to continue</Text>
+        </View>
         {/* Email input */}
         <View style={General_Style.inputsViewContainer}>
           <TextInput

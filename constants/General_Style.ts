@@ -13,8 +13,11 @@ export const General_Style = StyleSheet.create({
     height: 60,
   },
   dataViewAuth: {
-    top: height * 0.15,
-    left: width * 0.1,
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "90%",
+    alignSelf: "center",
   },
   title: {
     fontSize: 30,
@@ -26,7 +29,7 @@ export const General_Style = StyleSheet.create({
     fontSize: 15,
     color: Colors.gray,
     top: height * 0.015,
-    // left: width * 0.02,
+    left: width * 0.025,
   },
   input: {
     height: 50,
@@ -55,7 +58,7 @@ export const General_Style = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 5,
     alignItems: "center",
-    top: height * 0.025,
+    marginTop: 25,
   },
   loginButtonText: {
     color: "#ffffff",
@@ -63,13 +66,12 @@ export const General_Style = StyleSheet.create({
     fontSize: 16,
   },
   inputsViewContainer: {
-    width: "80%",
-    top: height * 0.1,
-    maxWidth: "80%",
+    width: "100%",
+    marginTop: 40,
   },
   newPlayerView: {
     flexDirection: "row",
     justifyContent: "center",
-    top: height * 0.05,
+    marginTop: 30,
   },
 });
