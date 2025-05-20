@@ -48,3 +48,18 @@ export const signupUser = async (email: string, pseudo: string, password: string
     }
   }
 };
+
+export const forgotPasswordRequest = async (email: string) => {
+  try {
+    const response = await axios.post(`${PIUBLIC_URI}/api/auth/forgot-password`, {
+      email,
+    });
+    return response.data; 
+ } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message);
+    } else {
+      throw new Error("Server error");
+    }
+  }
+};

@@ -44,6 +44,10 @@ const SignUp = () => {
       alert("Passwords do not match");
       return;
     }
+    if (!email || !password || !confirmPassword) {
+      alert("Please fill in all fields");
+      return;
+    }
     try {
       const data = await signupUser(email, pseudo, password);
       console.log("User registered:", data);

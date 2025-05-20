@@ -1,4 +1,5 @@
 import { General_Style } from "@/constants/General_Style";
+import { forgotPasswordRequest } from "@/services/authService";
 import { Image } from "expo-image";
 import { router, useNavigation } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -17,7 +18,12 @@ const ForgotPassword = () => {
     });
   }, [navigation]);
 
-  const handleForgotPassword = () => {
+  const validateEmail = (email: any) => {
+    const regex = /\S+@\S+\.\S+/;
+    return regex.test(email);
+  };
+
+  const handleForgotPassword = async () => {
     if (!email || !validateEmail(email)) {
       setErrorMessage("Please enter a valid email address.");
       return;
@@ -26,18 +32,15 @@ const ForgotPassword = () => {
     setIsLoading(true);
     setErrorMessage("");
 
-    // Simulate an API call to send the code
-    setTimeout(() => {
-      // Assuming the API returns successfully
+    try {
+      const data = await forgotPasswordRequest(email);
+      alert(data.message || "A PIN code has been sent to your email.");
+      router.push("/verifyPin");
+    } catch (error: any) {
+      setErrorMessage(error.message);
+    } finally {
       setIsLoading(false);
-      alert("A PIN code has been sent to your email.");
-      router.push("/verifyPin"); // Redirect to the PIN verification screen (you need to implement it)
-    }, 500);
-  };
-
-  const validateEmail = (email: any) => {
-    const regex = /\S+@\S+\.\S+/;
-    return regex.test(email);
+    }
   };
 
   return (
