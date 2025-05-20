@@ -1,12 +1,20 @@
 import { Colors } from "@/constants/Colors";
 import { General_Style } from "@/constants/General_Style";
+import { loginUser } from "@/services/authService";
 import { FontAwesome } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Checkbox from "expo-checkbox";
 import { Image } from "expo-image";
 import { router, useNavigation } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const SignIn = () => {
   const navigation = useNavigation();
@@ -14,6 +22,7 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isChecked, setChecked] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     navigation.setOptions({
@@ -21,9 +30,26 @@ const SignIn = () => {
     });
   }, [navigation]);
 
-  const handleLogin = () => {
-    // console.log("data", email, password);
-    router.push("../(drawer)/home");
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      if (email && password) {
+        const data = await loginUser(email, password);
+
+        if (isChecked) {
+          await AsyncStorage.setItem("token", data.token);
+          await AsyncStorage.setItem("user", JSON.stringify(data.user));
+        }
+
+        router.push("../(drawer)/home");
+      } else {
+        alert("Please fill in all fields");
+      }
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => {
     navigation.setOptions({
@@ -33,7 +59,7 @@ const SignIn = () => {
 
   return (
     <View style={General_Style.container}>
-      <StatusBar style="dark" translucent backgroundColor="transparent" />
+      <StatusBar style="dark" translucent />
       <View style={General_Style.dataViewAuth}>
         <View style={{ alignSelf: "flex-start" }}>
           <Image
@@ -107,7 +133,11 @@ const SignIn = () => {
             style={General_Style.loginButton}
             onPress={handleLogin}
           >
-            <Text style={General_Style.loginButtonText}>Login</Text>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={General_Style.loginButtonText}>Login</Text>
+            )}
           </TouchableOpacity>
 
           {/* New player ? signup */}

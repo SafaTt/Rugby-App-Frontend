@@ -1,5 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { General_Style } from "@/constants/General_Style";
+import { fetchNewPseudo, signupUser } from "@/services/authService";
 import { AntDesign, FontAwesome } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router, useNavigation } from "expo-router";
@@ -29,8 +30,27 @@ const SignUp = () => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  const handleLogin = () => {
-    console.log("data", email, password);
+  const handleFetchNewPseudo = async () => {
+    try {
+      const responsePseudo = await fetchNewPseudo();
+      if (responsePseudo) {
+        setPseudo(responsePseudo);
+      }
+    } catch {}
+  };
+
+  const handleSignup = async () => {
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+    try {
+      const data = await signupUser(email, pseudo, password);
+      console.log("User registered:", data);
+      router.push("../(drawer)/home");
+    } catch (error: any) {
+      alert(error.message);
+    }
   };
 
   return (
@@ -43,7 +63,7 @@ const SignUp = () => {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ flexGrow: 1, backgroundColor: "#fff" }}
       >
-        <StatusBar style="dark" translucent backgroundColor="transparent" />
+        <StatusBar style="dark" translucent />
 
         <View style={[General_Style.dataViewAuth, { top: 20 }]}>
           <View style={{ alignSelf: "flex-start" }}>
@@ -67,7 +87,10 @@ const SignUp = () => {
                 onChangeText={setPseudo}
                 keyboardType="default"
               />
-              <TouchableOpacity style={{ marginLeft: 10 }}>
+              <TouchableOpacity
+                style={{ marginLeft: 10 }}
+                onPress={() => handleFetchNewPseudo()}
+              >
                 <AntDesign name="retweet" size={24} color={Colors.primary} />
               </TouchableOpacity>
             </View>
@@ -128,7 +151,7 @@ const SignUp = () => {
             {/* Join us button */}
             <TouchableOpacity
               style={General_Style.loginButton}
-              onPress={handleLogin}
+              onPress={handleSignup}
             >
               <Text style={General_Style.loginButtonText}>Join us</Text>
             </TouchableOpacity>
@@ -136,7 +159,7 @@ const SignUp = () => {
             {/* Signin link */}
             <View style={General_Style.newPlayerView}>
               <Text style={{ color: Colors.gray }}>Already a player? </Text>
-              <TouchableOpacity onPress={() => router.push("../(drawer)/home")}>
+              <TouchableOpacity onPress={() => router.push("./signIn")}>
                 <Text style={{ color: Colors.primary, fontWeight: "bold" }}>
                   signin
                 </Text>

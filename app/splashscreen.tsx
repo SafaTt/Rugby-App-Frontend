@@ -1,14 +1,25 @@
 import { Colors } from "@/constants/Colors";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useNavigation } from "expo-router";
 import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 const SplashScreen = () => {
-  const navigation = useNavigation();
-
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.push("../(login)/signIn");
+    const timer = setTimeout(async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const userData = await AsyncStorage.getItem("user");
+
+        if (token && userData) {
+          router.replace("../(drawer)/home"); 
+        } else {
+          router.replace("../(login)/signIn");
+        }
+      } catch (error) {
+        console.error("Erreur vérification auto-login :", error);
+        router.replace("../(login)/signIn");
+      }
     }, 2000);
 
     return () => clearTimeout(timer);

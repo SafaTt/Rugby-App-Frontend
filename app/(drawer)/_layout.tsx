@@ -1,6 +1,7 @@
 import { Colors } from "@/constants/Colors";
 import { General_Style } from "@/constants/General_Style";
 import { AntDesign, SimpleLineIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DrawerContentScrollView } from "@react-navigation/drawer";
 import { router } from "expo-router";
 import { Drawer } from "expo-router/drawer";
@@ -57,7 +58,15 @@ export default function Layout() {
               <View style={General_Style.viewLine} />
               <TouchableOpacity
                 style={[General_Style.menuItemBtn, { top: 5 }]}
-                onPress={() => router.push("../(login)/signIn")}
+                onPress={async () => {
+                  try {
+                    await AsyncStorage.removeItem("token");
+                    await AsyncStorage.removeItem("user");
+                    router.replace("../(login)/signIn");
+                  } catch (error) {
+                    console.error("Erreur lors du logout :", error);
+                  }
+                }}
               >
                 <SimpleLineIcons
                   name="logout"

@@ -8,9 +8,17 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "icon": "./assets/images/ball.jpg",
-
+    "splash": {
+      "image": "./assets/images/ball.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.safatouil.rugbyapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "edgeToEdgeEnabled": true,
@@ -18,7 +26,8 @@
         "visible": true,
         "backgroundColor": "#284268",
         "barStyle": "dark-content"
-      }
+      },
+      "package": "com.safatouil.rugbyapp"
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +45,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f9ae1cc0-d56a-4a80-a605-f00791f93992"
+      }
     }
   }
 }
