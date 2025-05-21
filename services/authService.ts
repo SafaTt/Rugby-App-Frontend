@@ -22,7 +22,6 @@ export const fetchNewPseudo = async () => {
   try {
     const response = await axios.post(`${PIUBLIC_URI}/api/auth/generatePseudo`);
     if (response) {
-      console.log(response.data);
       return response.data.pseudo;
     } else {
       console.warn("Erreur lors de la génération du pseudo");
@@ -32,14 +31,18 @@ export const fetchNewPseudo = async () => {
   }
 };
 
-export const signupUser = async (email: string, pseudo: string, password: string) => {
+export const signupUser = async (
+  email: string,
+  pseudo: string,
+  password: string
+) => {
   try {
     const response = await axios.post(`${PIUBLIC_URI}/api/auth/register`, {
       email,
       pseudo,
       password,
     });
-    return response.data; 
+    return response.data;
   } catch (error: any) {
     if (error.response) {
       throw new Error(error.response.data.message);
@@ -51,11 +54,54 @@ export const signupUser = async (email: string, pseudo: string, password: string
 
 export const forgotPasswordRequest = async (email: string) => {
   try {
-    const response = await axios.post(`${PIUBLIC_URI}/api/auth/forgot-password`, {
+    const response = await axios.post(
+      `${PIUBLIC_URI}/api/auth/forgot-password`,
+      {
+        email,
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message);
+    } else {
+      throw new Error("Server error");
+    }
+  }
+};
+
+export const verifyRestCode = async (email: string, code: any) => {
+  try {
+    const response = await axios.post(`${PIUBLIC_URI}/api/auth/verify-code`, {
       email,
+      code,
     });
-    return response.data; 
- } catch (error: any) {
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data.message);
+    } else {
+      throw new Error("Server error");
+    }
+  }
+};
+
+export const resetPasswordRequest = async (
+  email: string,
+  code: string,
+  newPassword: string
+) => {
+  try {
+    const response = await axios.post(
+      `${PIUBLIC_URI}/api/auth/reset-password`,
+      {
+        email,
+        code,
+        newPassword,
+      }
+    );
+    return response.data;
+  } catch (error: any) {
     if (error.response) {
       throw new Error(error.response.data.message);
     } else {

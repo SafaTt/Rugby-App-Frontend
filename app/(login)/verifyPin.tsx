@@ -1,15 +1,23 @@
 import { General_Style } from "@/constants/General_Style";
+import { verifyRestCode } from "@/services/authService";
 import { Image } from "expo-image";
-import { router, useNavigation } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const VerifyPin = () => {
   const navigation = useNavigation();
   const [pin, setPin] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const { email } = useLocalSearchParams();
 
   useEffect(() => {
     navigation.setOptions({
@@ -17,27 +25,24 @@ const VerifyPin = () => {
     });
   }, [navigation]);
 
-  const handleVerifyPin = () => {
-    if (pin.length !== 6) {
-      // Assuming the PIN is 6 digits
-      setErrorMessage("The PIN must be 6 digits.");
+  const handleVerifyPin = async () => {
+    if (pin.length !== 4) {
+      setErrorMessage("The PIN must be 4 digits.");
       return;
     }
 
     setIsLoading(true);
     setErrorMessage("");
 
-    // Simulate API call to verify the PIN
-    setTimeout(() => {
-      if (pin.length === 6) {
-        // Simulate success
-        setIsLoading(false);
-        router.push("/resetPwd"); // Redirect to the reset password screen
-      } else {
-        setIsLoading(false);
-        setErrorMessage("Invalid PIN. Please try again.");
-      }
-    }, 1000);
+    try {
+      await verifyRestCode(email as string, pin);
+      router.push({ pathname: "/resetPwd", params: { email, pin } });
+    } catch (error: any) {
+      setErrorMessage(error.message || "Invalid PIN. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+
   };
 
   return (
@@ -63,7 +68,7 @@ const VerifyPin = () => {
             value={pin}
             onChangeText={setPin}
             keyboardType="numeric"
-            maxLength={6}
+            maxLength={4}
           />
 
           {/* Error message */}
@@ -77,9 +82,11 @@ const VerifyPin = () => {
             onPress={handleVerifyPin}
             disabled={isLoading}
           >
-            <Text style={General_Style.loginButtonText}>
-              {isLoading ? "Verifying..." : "Verify PIN"}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={General_Style.loginButtonText}>Verify PIN</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>

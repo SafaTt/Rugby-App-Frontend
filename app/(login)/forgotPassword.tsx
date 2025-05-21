@@ -4,7 +4,13 @@ import { Image } from "expo-image";
 import { router, useNavigation } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const ForgotPassword = () => {
   const navigation = useNavigation();
@@ -35,7 +41,10 @@ const ForgotPassword = () => {
     try {
       const data = await forgotPasswordRequest(email);
       alert(data.message || "A PIN code has been sent to your email.");
-      router.push("/verifyPin");
+      router.push({
+        pathname: "/verifyPin",
+        params: { email },
+      });
     } catch (error: any) {
       setErrorMessage(error.message);
     } finally {
@@ -66,6 +75,7 @@ const ForgotPassword = () => {
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
+            autoCapitalize="none"
           />
 
           {/* Error message */}
@@ -79,9 +89,11 @@ const ForgotPassword = () => {
             onPress={handleForgotPassword}
             disabled={isLoading}
           >
-            <Text style={General_Style.loginButtonText}>
-              {isLoading ? "Sending..." : "Send mail"}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={General_Style.loginButtonText}>Send mail</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>

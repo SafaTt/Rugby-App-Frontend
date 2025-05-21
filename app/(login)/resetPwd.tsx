@@ -1,10 +1,17 @@
 import { General_Style } from "@/constants/General_Style";
+import { resetPasswordRequest } from "@/services/authService";
 import { FontAwesome } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { router, useNavigation } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const ResetPassword = () => {
   const navigation = useNavigation();
@@ -15,6 +22,12 @@ const ResetPassword = () => {
     useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { email, pin } = useLocalSearchParams() as {
+    email: string;
+    pin: any;
+  };
+
+  console.log("email and pin", email, pin);
 
   useEffect(() => {
     navigation.setOptions({
@@ -30,7 +43,7 @@ const ResetPassword = () => {
     setIsPasswordVisible(!isPasswordVisible);
   };
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     if (newPassword !== confirmPassword) {
       setErrorMessage("Passwords do not match.");
       return;
@@ -44,11 +57,15 @@ const ResetPassword = () => {
     setIsLoading(true);
     setErrorMessage("");
 
-    // Simuler un appel API pour réinitialiser le mot de passe
-    setTimeout(() => {
+    try {
+      const data = await resetPasswordRequest(email, pin, newPassword);
+      alert(data.message || "Password has been reset successfully.");
+      router.push("/signIn");
+    } catch (error: any) {
+      setErrorMessage(error.response?.data?.message || "An error occurred.");
+    } finally {
       setIsLoading(false);
-      router.push("/signIn"); // Rediriger vers la page de connexion après une réinitialisation réussie
-    }, 2000);
+    }
   };
 
   return (
@@ -125,9 +142,11 @@ const ResetPassword = () => {
             onPress={handleResetPassword}
             disabled={isLoading}
           >
-            <Text style={General_Style.loginButtonText}>
-              {isLoading ? "Resetting..." : "Reset Password"}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={General_Style.loginButtonText}>Reset Password</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>

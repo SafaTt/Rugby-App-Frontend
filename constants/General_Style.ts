@@ -14,10 +14,10 @@ export const General_Style = StyleSheet.create({
   },
   dataViewAuth: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
     width: "90%",
     alignSelf: "center",
+    top: height * 0.08,
   },
   title: {
     fontSize: 30,
@@ -69,7 +69,7 @@ export const General_Style = StyleSheet.create({
   newPlayerView: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 30,
+    marginTop: 20,
   },
   checkbox: {},
   checkboxViewContainer: {
@@ -95,5 +95,58 @@ export const General_Style = StyleSheet.create({
     borderWidth: 0.5,
     width: "100%",
     borderColor: "#fff",
+  },
+  titleHome: {
+    fontSize: 85,
+    fontWeight: "bold",
+    color: "#fff",
+    alignSelf: "center",
+    top: height * 0.1,
+    textAlign: "center",
+  },
+  imgBall: {
+    width: 250,
+    height: 250,
+    position: "absolute",
+    bottom: height * 0.15,
+    alignSelf: "center",
+  },
+  subtitleHome: {
+    position: "absolute",
+    bottom: height * 0.11,
+    alignSelf: "center",
+    fontSize: 50,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  clickBtn: {
+    borderWidth: 1,
+    backgroundColor: "rgba(22, 21, 21, 0.57)",
+    borderColor: "#fff",
+    position: "absolute",
+    bottom: height * 0.07,
+    alignSelf: "center",
+    alignItems: "center",
+    padding: 5,
+    width: 200,
+  },
+  clickText: {
+    color: "rgb(246, 233, 4)",
+  },
+
+  playerNbBtn: {
+    borderWidth: 2,
+    backgroundColor: "rgba(246, 238, 4, 0.6)",
+    borderColor: Colors.primary,
+    alignSelf: "center",
+    alignItems: "center",
+    padding: 5,
+    width: 200,
+    top: height * 0.18,
+  },
+  playerNbTxt: {
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });

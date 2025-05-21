@@ -80,6 +80,7 @@ const SignIn = () => {
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
+            autoCapitalize="none"
           />
 
           {/* Password input */}
@@ -90,6 +91,7 @@ const SignIn = () => {
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!isPasswordVisible}
+              autoCapitalize="none"
             />
             <TouchableOpacity
               onPress={() => setIsPasswordVisible(!isPasswordVisible)}

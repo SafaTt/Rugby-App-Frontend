@@ -7,9 +7,9 @@
     "scheme": "rugbyapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "icon": "./assets/images/ball.jpg",
+    "icon": "./assets/images/generals/ball.png",
     "splash": {
-      "image": "./assets/images/ball.jpg",
+      "image": "./assets/images/generals/ball.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -33,16 +33,7 @@
       "bundler": "metro",
       "output": "static"
     },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "resizeMode": "cover",
-          "backgroundColor": "#0B0D21"
-        }
-      ]
-    ],
+    "plugins": ["expo-router"],
     "experiments": {
       "typedRoutes": true
     },
