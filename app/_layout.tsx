@@ -1,3 +1,4 @@
+import { useColorScheme } from "@/hooks/useColorScheme";
 import {
   DarkTheme,
   DefaultTheme,
@@ -7,11 +8,8 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
-import "react-native-reanimated";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
+import "react-native-reanimated";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

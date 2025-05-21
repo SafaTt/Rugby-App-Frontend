@@ -33,7 +33,17 @@
       "bundler": "metro",
       "output": "static"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "image": "./assets/images/generals/ball.png"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },
