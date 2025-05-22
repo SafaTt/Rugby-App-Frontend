@@ -29,7 +29,6 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="splashscreen" options={{ headerShown: false }} />
         <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
