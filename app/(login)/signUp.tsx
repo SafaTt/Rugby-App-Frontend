@@ -48,10 +48,12 @@ const SignUp = () => {
 
     if (password !== confirmPassword) {
       alert("Passwords do not match");
+      setLoading(false);
       return;
     }
     if (!email || !password || !confirmPassword) {
       alert("Please fill in all fields");
+      setLoading(false);
       return;
     }
     try {
@@ -60,6 +62,7 @@ const SignUp = () => {
       router.push("../(drawer)/home");
     } catch (error: any) {
       alert(error.message);
+      setLoading(false);
     } finally {
       setLoading(false);
     }

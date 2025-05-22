@@ -37,7 +37,7 @@ export const General_Style = StyleSheet.create({
     marginBottom: 15,
     paddingLeft: 10,
     borderRadius: 5,
-    color: "#fff",
+    color: "black",
   },
   passwordContainer: {
     position: "relative",

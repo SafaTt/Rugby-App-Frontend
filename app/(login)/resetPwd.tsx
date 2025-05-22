@@ -92,7 +92,8 @@ const ResetPassword = () => {
             value={newPassword}
             onChangeText={setNewPassword}
             secureTextEntry={!isNewPasswordVisible}
-                        placeholderTextColor={Colors.gray}
+            placeholderTextColor={Colors.gray}
+            
           />
           <TouchableOpacity
             onPress={() =>
@@ -118,7 +119,7 @@ const ResetPassword = () => {
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry={!isConfirmPasswordVisible}
-            placeholderTextColor={Colors.gray}
+              placeholderTextColor={Colors.gray}
             />
             <TouchableOpacity
               onPress={() =>
