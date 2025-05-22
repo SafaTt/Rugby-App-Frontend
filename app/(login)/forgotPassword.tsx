@@ -1,3 +1,4 @@
+import { Colors } from "@/constants/Colors";
 import { General_Style } from "@/constants/General_Style";
 import { forgotPasswordRequest } from "@/services/authService";
 import { Image } from "expo-image";
@@ -76,6 +77,7 @@ const ForgotPassword = () => {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            placeholderTextColor={Colors.gray}
           />
 
           {/* Error message */}

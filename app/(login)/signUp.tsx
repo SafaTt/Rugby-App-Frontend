@@ -103,6 +103,7 @@ const SignUp = () => {
                   value={pseudo}
                   onChangeText={setPseudo}
                   keyboardType="default"
+                  placeholderTextColor={Colors.gray}
                 />
                 <TouchableOpacity
                   style={{ marginLeft: 10 }}
@@ -120,6 +121,7 @@ const SignUp = () => {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                placeholderTextColor={Colors.gray}
               />
 
               {/* Password */}
@@ -131,6 +133,7 @@ const SignUp = () => {
                   onChangeText={setPassword}
                   secureTextEntry={!isPasswordVisible}
                   autoCapitalize="none"
+                  placeholderTextColor={Colors.gray}
                 />
                 <TouchableOpacity
                   onPress={() => setIsPasswordVisible(!isPasswordVisible)}
@@ -153,6 +156,7 @@ const SignUp = () => {
                   onChangeText={setConfirmPassword}
                   secureTextEntry={!isConfirmPasswordVisible}
                   autoCapitalize="none"
+                  placeholderTextColor={Colors.gray}
                 />
                 <TouchableOpacity
                   onPress={() =>

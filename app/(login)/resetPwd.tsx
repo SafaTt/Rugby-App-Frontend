@@ -1,3 +1,4 @@
+import { Colors } from "@/constants/Colors";
 import { General_Style } from "@/constants/General_Style";
 import { resetPasswordRequest } from "@/services/authService";
 import { FontAwesome } from "@expo/vector-icons";
@@ -91,6 +92,7 @@ const ResetPassword = () => {
             value={newPassword}
             onChangeText={setNewPassword}
             secureTextEntry={!isNewPasswordVisible}
+                        placeholderTextColor={Colors.gray}
           />
           <TouchableOpacity
             onPress={() =>
@@ -116,6 +118,7 @@ const ResetPassword = () => {
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry={!isConfirmPasswordVisible}
+            placeholderTextColor={Colors.gray}
             />
             <TouchableOpacity
               onPress={() =>

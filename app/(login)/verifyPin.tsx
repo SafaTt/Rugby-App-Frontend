@@ -1,3 +1,4 @@
+import { Colors } from "@/constants/Colors";
 import { General_Style } from "@/constants/General_Style";
 import { verifyRestCode } from "@/services/authService";
 import { Image } from "expo-image";
@@ -42,7 +43,6 @@ const VerifyPin = () => {
     } finally {
       setIsLoading(false);
     }
-
   };
 
   return (
@@ -69,6 +69,7 @@ const VerifyPin = () => {
             onChangeText={setPin}
             keyboardType="numeric"
             maxLength={4}
+            placeholderTextColor={Colors.gray}
           />
 
           {/* Error message */}
