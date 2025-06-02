@@ -25,4 +25,6 @@ export const Colors = {
   },
   primary: "#1e81b0",
   gray: "#acacac",
+  boardBG: "#231f20",
+  yellow:'#fff101'
 };

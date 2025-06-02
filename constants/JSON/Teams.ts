@@ -1,0 +1,87 @@
+export const teams = [
+  {
+    title: "NRL",
+    teams: [
+      { title: "BULLDOGS", color: "#1155a6", textColor: "#fff" },
+      { title: "WESTS TIGERS", color: "#f26325", textColor: "#000" },
+      { title: "RABBITOHS", color: "#41b64b", textColor: "#e73f27" },
+      { title: "EELS", color: "#f26325", textColor: "#fff101" },
+      { title: "PANTHERS", color: "#231f20", textColor: "#f26325" },
+      { title: "BRONCOS", color: "#8b0202", textColor: "#fff101" },
+      { title: "WARRIORS", color: "#1155a6", textColor: "#41b64b" },
+      { title: "STORM", color: "#a2418f", textColor: "#fff101" },
+
+      { title: "ROOSTERS", color: "#1155a6", textColor: "#ef3e25" },
+      { title: "DRAGONS", color: "#ef3e25", textColor: "#fff" },
+      { title: "SEA EAGLES", color: "#8b0202", textColor: "#fff" },
+      { title: "SHARKS", color: "#00b5e7", textColor: "#fff" },
+      { title: "RAIDERS", color: "#9ccb3c", textColor: "#1155a6" },
+      { title: "KNIGHTS", color: "#1155a6", textColor: "#ef3e25" },
+      { title: "NORTH QLD", color: "#fff101", textColor: "#1155a6" },
+      { title: "TITANS", color: "#00b5e7", textColor: "#fff101" },
+      { title: "DOLPHINS", color: "#ef3e25", textColor: "#fff101" },
+    ],
+  },
+
+  {
+    title: "SUPER LEAGUE",
+    teams: [
+      { title: "BULLDOGS", color: "#1155a6", textColor: "#fff" },
+      { title: "WESTS TIGERS", color: "#f26325", textColor: "#000" },
+      { title: "RABBITOHS", color: "#41b64b", textColor: "#e73f27" },
+      { title: "EELS", color: "#f26325", textColor: "#fff101" },
+      { title: "PANTHERS", color: "#231f20", textColor: "#f26325" },
+      { title: "BRONCOS", color: "#8b0202", textColor: "#fff101" },
+      { title: "WARRIORS", color: "#1155a6", textColor: "#41b64b" },
+      { title: "STORM", color: "#a2418f", textColor: "#fff101" },
+    ],
+  },
+
+  {
+    title: "INTERNATIONAL",
+    teams: [
+      { title: "BULLDOGS", color: "#1155a6", textColor: "#fff" },
+      { title: "WESTS TIGERS", color: "#f26325", textColor: "#000" },
+      { title: "RABBITOHS", color: "#41b64b", textColor: "#e73f27" },
+      { title: "EELS", color: "#f26325", textColor: "#fff101" },
+      { title: "PANTHERS", color: "#231f20", textColor: "#f26325" },
+      { title: "BRONCOS", color: "#8b0202", textColor: "#fff101" },
+      { title: "WARRIORS", color: "#1155a6", textColor: "#41b64b" },
+      { title: "STORM", color: "#a2418f", textColor: "#fff101" },
+
+      { title: "ROOSTERS", color: "#1155a6", textColor: "#ef3e25" },
+      { title: "DRAGONS", color: "#ef3e25", textColor: "#fff" },
+      { title: "SEA EAGLES", color: "#8b0202", textColor: "#fff" },
+      { title: "SHARKS", color: "#00b5e7", textColor: "#fff" },
+      { title: "RAIDERS", color: "#9ccb3c", textColor: "#1155a6" },
+      { title: "KNIGHTS", color: "#1155a6", textColor: "#ef3e25" },
+      { title: "NORTH QLD", color: "#fff101", textColor: "#1155a6" },
+      { title: "TITANS", color: "#00b5e7", textColor: "#fff101" },
+      { title: "DOLPHINS", color: "#ef3e25", textColor: "#fff101" },
+    ],
+  },
+
+  {
+    title: "OTHER",
+    teams: [
+      { title: "BULLDOGS", color: "#1155a6", textColor: "#fff" },
+      { title: "WESTS TIGERS", color: "#f26325", textColor: "#000" },
+      { title: "RABBITOHS", color: "#41b64b", textColor: "#e73f27" },
+      { title: "EELS", color: "#f26325", textColor: "#fff101" },
+      { title: "PANTHERS", color: "#231f20", textColor: "#f26325" },
+      { title: "BRONCOS", color: "#8b0202", textColor: "#fff101" },
+      { title: "WARRIORS", color: "#1155a6", textColor: "#41b64b" },
+      { title: "STORM", color: "#a2418f", textColor: "#fff101" },
+
+      { title: "ROOSTERS", color: "#1155a6", textColor: "#ef3e25" },
+      { title: "DRAGONS", color: "#ef3e25", textColor: "#fff" },
+      { title: "SEA EAGLES", color: "#8b0202", textColor: "#fff" },
+      { title: "SHARKS", color: "#00b5e7", textColor: "#fff" },
+      { title: "RAIDERS", color: "#9ccb3c", textColor: "#1155a6" },
+      { title: "KNIGHTS", color: "#1155a6", textColor: "#ef3e25" },
+      { title: "NORTH QLD", color: "#fff101", textColor: "#1155a6" },
+      { title: "TITANS", color: "#00b5e7", textColor: "#fff101" },
+      { title: "DOLPHINS", color: "#ef3e25", textColor: "#fff101" },
+    ],
+  },
+];
