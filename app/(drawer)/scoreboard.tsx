@@ -1,65 +1,66 @@
 import { General_Style } from "@/constants/General_Style";
+import { getMatchById } from "@/services/matchService";
 import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 interface ScoreboardProps {
-  step: any;
-  competition: any;
-  bgSelectedTeam: any;
-  textSelectedTeamColor: any;
-  teamSelected: any;
+  step: number;
+  matchId: string;
   scoreUserOne: any;
   scoreUserTwo: any;
-  matchDuration: any;
-  oppositionTeam: any;
-  textOppositionTeamColor: any;
 }
 
 const Scoreboard: React.FC<ScoreboardProps> = ({
   step,
-  competition,
-  bgSelectedTeam,
-  textSelectedTeamColor,
-  teamSelected,
+  matchId,
   scoreUserOne,
   scoreUserTwo,
-  matchDuration,
-  oppositionTeam,
-  textOppositionTeamColor,
 }) => {
-  // Convertir matchDuration en secondes
-  const getInitialSeconds = () => {
-    if (matchDuration === "4 MINUTES") return 4 * 60;
-    if (matchDuration === "6 MINUTES") return 6 * 60;
-    if (matchDuration === "10 MINUTES") return 10 * 60;
+  const [match, setMatch] = useState<any>(null);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+
+  useEffect(() => {
+    const fetchMatch = async () => {
+      const result = await getMatchById(matchId);
+      if (result) {
+        setMatch(result);
+        setSecondsLeft(getInitialSeconds(result.duration));
+      }
+    };
+
+    if (matchId && step === 7) {
+      fetchMatch();
+    }
+  }, [matchId, step]);
+
+  const getInitialSeconds = (duration: string) => {
+    if (duration === "4 MINUTES") return 4 * 60;
+    if (duration === "6 MINUTES") return 6 * 60;
+    if (duration === "10 MINUTES") return 10 * 60;
     return 0;
   };
 
-  const [secondsLeft, setSecondsLeft] = useState(getInitialSeconds());
-
   useEffect(() => {
-    if (step === 6 && secondsLeft > 0) {
+    if (step === 7 && secondsLeft > 0) {
       const interval = setInterval(() => {
         setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
       }, 1000);
-
-      return () => clearInterval(interval); // cleanup à l'unmount ou changement
+      return () => clearInterval(interval);
     }
   }, [step, secondsLeft]);
 
-  // Formater mm:ss
-  const formatTime = (secs: any) => {
+  const formatTime = (secs: number) => {
     const minutes = Math.floor(secs / 60);
     const seconds = secs % 60;
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
-  if (step !== 6) return null;
+  if (step !== 7 || !match) return null;
 
   return (
     <View style={{ flex: 1, alignItems: "center" }}>
       <View style={General_Style.viewBoard}>
         <Text style={General_Style.titleBoard}>SCOREBOARD</Text>
-        <Text style={General_Style.teamBoard}>{competition}</Text>
+        <Text style={General_Style.teamBoard}>{match.competition}</Text>
 
         <View
           style={{
@@ -68,10 +69,11 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
             justifyContent: "space-between",
           }}
         >
+          {/* Player One */}
           <View>
             <View
               style={{
-                backgroundColor: bgSelectedTeam,
+                backgroundColor: match.playerOneTeam.color,
                 padding: 10,
                 marginVertical: 4,
                 borderWidth: 1,
@@ -79,30 +81,33 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
                 marginLeft: 5,
               }}
             >
-              <Text style={{ color: textSelectedTeamColor }}>
-                {teamSelected}
+              <Text style={{ color: match.playerOneTeam.textColor }}>
+                {match.playerOneTeam.title}
               </Text>
             </View>
             <Text style={General_Style.textScore}>{scoreUserOne}</Text>
           </View>
 
-          <View>
-            <View
-              style={{
-                backgroundColor: textSelectedTeamColor,
-                padding: 10,
-                marginVertical: 4,
-                borderWidth: 1,
-                borderColor: "#fff",
-                marginRight: 5,
-              }}
-            >
-              <Text style={{ color: textOppositionTeamColor }}>
-                {oppositionTeam}
-              </Text>
+          {/* Player Two */}
+          {match.playerTwoTeam && (
+            <View>
+              <View
+                style={{
+                  backgroundColor: match.playerTwoTeam.color,
+                  padding: 10,
+                  marginVertical: 4,
+                  borderWidth: 1,
+                  borderColor: "#fff",
+                  marginRight: 5,
+                }}
+              >
+                <Text style={{ color: match.playerTwoTeam.textColor }}>
+                  {match.playerTwoTeam.title}
+                </Text>
+              </View>
+              <Text style={General_Style.textScore}>{scoreUserTwo}</Text>
             </View>
-            <Text style={General_Style.textScore}>{scoreUserTwo}</Text>
-          </View>
+          )}
         </View>
 
         <View style={General_Style.viewDurationTop}>

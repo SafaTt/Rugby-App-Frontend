@@ -86,3 +86,60 @@ export const joinMatch = async (matchId: any, playerTwoTeam: any) => {
   }
 };
 
+export const createMatch = async ({
+  competition,
+  duration,
+  playerOneTeam,
+}: {
+  competition: string;
+  duration: string;
+  playerOneTeam: {
+    title: string;
+    color: string;
+    textColor: string;
+  };
+}) => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+
+    const res = await axios.post(
+      `${PIUBLIC_URI}/api/match/create`,
+      {
+        competition,
+        duration,
+        playerOneTeam,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error: any) {
+    console.log(
+      "❌ Error while creating match:",
+      error.response?.data || error.message
+    );
+    return null;
+  }
+};
+
+export const getMatchById = async (matchId: string) => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    const res = await axios.get(
+      `${PIUBLIC_URI}/api/match/getMatch/${matchId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return res.data;
+  } catch (error) {
+    console.log("Erreur récupération match:", error);
+    return null;
+  }
+};
