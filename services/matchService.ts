@@ -1,6 +1,7 @@
 import { PIUBLIC_URI } from "@/utils/config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import Toast from "react-native-toast-message";
 
 export const findFirstPendingMatch = async (
   competition: any,
@@ -51,7 +52,37 @@ export const joinMatch = async (matchId: any, playerTwoTeam: any) => {
 
     return res.data;
   } catch (error: any) {
-    console.log("Erreur lors de la jointure :", error.response?.data || error);
+    const message = error.response?.data?.message;
+
+    if (message) {
+      if (message.includes("same team")) {
+        Toast.show({
+          type: "error",
+          text1: "Team already chosen",
+          text2: "You cannot select the same team as Player One.",
+        });
+      } else if (message.includes("already full")) {
+        Toast.show({
+          type: "error",
+          text1: "Match Full",
+          text2: "This match is already full. Try another one.",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Join failed",
+          text2: message,
+        });
+      }
+    } else {
+      Toast.show({
+        type: "error",
+        text1: "Server Error",
+        text2: "Something went wrong. Please try again.",
+      });
+    }
+
     return null;
   }
 };
+

@@ -6,7 +6,10 @@ import { useNavigation } from "expo-router";
 import LottieView from "lottie-react-native";
 import { useEffect, useState } from "react";
 import { Dimensions, Text, TouchableOpacity, View } from "react-native";
+import Toast from "react-native-toast-message";
 import waitLottie from "../../assets/lottie/loader.json";
+import Scoreboard from "./scoreboard";
+
 const { width, height } = Dimensions.get("window");
 const Home = () => {
   const navigation = useNavigation();
@@ -39,8 +42,6 @@ const Home = () => {
           matchDuration
         );
 
-        console.log("pendingMatch", pendingMatch);
-
         if (pendingMatch) {
           const result = await joinMatch(pendingMatch._id, {
             title: teamSelected,
@@ -54,10 +55,15 @@ const Home = () => {
             setTextOppositionTeamColor(result.playerOneTeam.textColor);
             setStep(6);
           } else {
-            console.log("Erreur lors de la jointure du match");
+            setStep(1); // Revenir à l'accueil si la jointure échoue
           }
         } else {
-          console.log("Aucun match en attente trouvé");
+          Toast.show({
+            type: "info",
+            text1: "No matches available",
+            text2: "No pending matches found. Please try again later.",
+          });
+          setStep(1); // Revenir à l'étape initiale
         }
       };
 
@@ -483,61 +489,18 @@ const Home = () => {
 
       {step === 6 && (
         <View style={{ flex: 1, alignItems: "center" }}>
-          <View style={General_Style.viewBoard}>
-            <Text style={General_Style.titleBoard}>SCOREBOARD</Text>
-            <Text style={General_Style.teamBoard}>{competition}</Text>
-            <View
-              style={{
-                flexDirection: "row",
-                width: "90%",
-                justifyContent: "space-between",
-              }}
-            >
-              <View>
-                <View
-                  style={{
-                    backgroundColor: bgSelectedTeam,
-                    padding: 10,
-                    marginVertical: 4,
-                    borderWidth: 1,
-                    borderColor: "#fff",
-                  }}
-                >
-                  <Text style={{ color: textSelectedTeamColor }}>
-                    {teamSelected}
-                  </Text>
-                </View>
-                <Text style={General_Style.textScore}>{scoreUserOne}</Text>
-              </View>
-
-              <View>
-                <View
-                  style={{
-                    backgroundColor: textSelectedTeamColor,
-                    padding: 10,
-                    marginVertical: 4,
-                    borderWidth: 1,
-                    borderColor: "#fff",
-                  }}
-                >
-                  <Text style={{ color: textOppositionTeamColor }}>
-                    {oppositionTeam}
-                  </Text>
-                </View>
-                <Text style={General_Style.textScore}>{scoreUserTwo}</Text>
-              </View>
-            </View>
-
-            <View style={General_Style.viewDurationTop}>
-              <Text>
-                {matchDuration === "4 MINUTES"
-                  ? "4:00"
-                  : matchDuration === "6 MINUTES"
-                  ? "6:00"
-                  : "10:00"}
-              </Text>
-            </View>
-          </View>
+          <Scoreboard
+            step={step}
+            competition={competition}
+            bgSelectedTeam={bgSelectedTeam}
+            textSelectedTeamColor={textSelectedTeamColor}
+            teamSelected={teamSelected}
+            scoreUserOne={scoreUserOne}
+            scoreUserTwo={scoreUserTwo}
+            matchDuration={matchDuration}
+            oppositionTeam={oppositionTeam}
+            textOppositionTeamColor={textOppositionTeamColor}
+          />
         </View>
       )}
     </ImageBackground>

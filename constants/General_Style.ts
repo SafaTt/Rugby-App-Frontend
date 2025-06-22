@@ -151,7 +151,7 @@ export const General_Style = StyleSheet.create({
     fontWeight: "bold",
   },
   viewBoard: {
-    width: "80%",
+    width: "90%",
     height: height * 0.25,
     backgroundColor: Colors.boardBG,
     borderWidth: 1,
@@ -163,6 +163,7 @@ export const General_Style = StyleSheet.create({
     color: "white",
     fontSize: 22,
     fontWeight: "bold",
+    marginTop: 5,
   },
   teamBoard: {
     color: Colors.yellow,
