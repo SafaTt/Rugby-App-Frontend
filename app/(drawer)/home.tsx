@@ -1,5 +1,6 @@
 import { General_Style } from "@/constants/General_Style";
 import { teams as teamsData } from "@/constants/JSON/Teams";
+import { findFirstPendingMatch, joinMatch } from "@/services/matchService";
 import { Image, ImageBackground } from "expo-image";
 import { useNavigation } from "expo-router";
 import LottieView from "lottie-react-native";
@@ -29,12 +30,38 @@ const Home = () => {
     });
   }, [navigation]);
 
+  // 🧠 Dans le corps du composant (au début ou sous les useState)
   useEffect(() => {
     if (step === 5 && currentPlayer === 2) {
-      const timeout = setTimeout(() => {
-        setStep(0); // Ou une navigation vers un nouvel écran
-      }, 5000);
-      return () => clearTimeout(timeout);
+      const tryJoinMatch = async () => {
+        const pendingMatch = await findFirstPendingMatch(
+          competition,
+          matchDuration
+        );
+
+        console.log("pendingMatch", pendingMatch);
+
+        if (pendingMatch) {
+          const result = await joinMatch(pendingMatch._id, {
+            title: teamSelected,
+            color: bgSelectedTeam,
+            textColor: textSelectedTeamColor,
+          });
+
+          if (result) {
+            setOppositionTeam(result.playerOneTeam.title);
+            setBgOppositionTeam(result.playerOneTeam.color);
+            setTextOppositionTeamColor(result.playerOneTeam.textColor);
+            setStep(6);
+          } else {
+            console.log("Erreur lors de la jointure du match");
+          }
+        } else {
+          console.log("Aucun match en attente trouvé");
+        }
+      };
+
+      tryJoinMatch();
     }
   }, [step, currentPlayer]);
 
@@ -336,7 +363,7 @@ const Home = () => {
 
       {step === 5 &&
         (currentPlayer === 1 ? (
-          // Affichage pour que le joueur choisisse l’équipe adverse (IA)
+          // Joueur 1 (IA) - choisir manuellement l’équipe adverse
           <View>
             <Text
               style={[
@@ -361,9 +388,9 @@ const Home = () => {
               const teamList = selected.teams;
               const leftTeams = teamList.slice(0, 8);
               const rightTeams = teamList.slice(8, 16);
-              const bottomTeam = teamList[16]; // 17ème équipe (optionnelle)
+              const bottomTeam = teamList[16];
 
-              const renderTeamButton = (team: any, index: number) => (
+              const renderTeamButton = (team: any, index: any) => (
                 <TouchableOpacity
                   key={index}
                   onPress={() => {
@@ -400,14 +427,10 @@ const Home = () => {
                       top: 70,
                     }}
                   >
-                    {/* Colonne gauche */}
                     <View>{leftTeams.map(renderTeamButton)}</View>
-
-                    {/* Colonne droite */}
                     <View>{rightTeams.map(renderTeamButton)}</View>
                   </View>
 
-                  {/* Dernière équipe (en bas) */}
                   {bottomTeam && (
                     <TouchableOpacity
                       style={{
@@ -442,7 +465,7 @@ const Home = () => {
             })()}
           </View>
         ) : (
-          // Affichage du loader si ce n'est pas le joueur 1
+          // Joueur 2 - on cherche un match existant
           <View
             style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
           >
@@ -453,7 +476,7 @@ const Home = () => {
               style={{ width: 200, height: 200 }}
             />
             <Text style={{ color: "#fff", fontSize: 18, marginTop: 20 }}>
-              Waiting for the second player to join...
+              Finding the second player...
             </Text>
           </View>
         ))}

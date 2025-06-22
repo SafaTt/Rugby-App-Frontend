@@ -1,4 +1,5 @@
 import { PIUBLIC_URI } from "@/utils/config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 export const loginUser = async (emailOrPseudo: string, password: string) => {
@@ -7,7 +8,6 @@ export const loginUser = async (emailOrPseudo: string, password: string) => {
       emailOrPseudo,
       password,
     });
-
     return response.data; // contient { token, user }
   } catch (error: any) {
     if (error.response) {
