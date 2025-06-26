@@ -6,6 +6,7 @@ import {
   getMatchById,
   joinMatch,
 } from "@/services/matchService";
+import { initializeSocket } from "@/utils/socket";
 import { Image, ImageBackground } from "expo-image";
 import { useNavigation } from "expo-router";
 import LottieView from "lottie-react-native";
@@ -35,67 +36,90 @@ const Home = () => {
   const [currentMatchId, setCurrentMatchId] = useState<any | null>();
 
   useEffect(() => {
-    navigation.setOptions({
-      headerShown: false,
-    });
+    navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  // 🧠 Dans le corps du composant (au début ou sous les useState)
+  // Setup socket once + listeners update when relevant states change
   useEffect(() => {
-    if (step === 6 && currentPlayer === 2) {
-      const tryJoinMatch = async () => {
-        try {
-          const pendingMatch = await findFirstPendingMatch(
-            competition,
-            matchDuration
-          );
+    let socket: any;
+    const setupSocket = async () => {
+      socket = await initializeSocket();
 
-          if (!pendingMatch) {
-            Toast.show({
-              type: "info",
-              text1: "No matches available",
-              text2: "No pending matches found. Please try again later.",
-            });
-            setStep(1);
-            setCurrentMatchId(null);
-            return;
-          }
+      socket.on("connect", () => {
+        console.log("✅ Connected to socket server");
+      });
 
-          setCurrentMatchId(pendingMatch._id);
+      socket.on("new_match_created", (data: any) => {
+        const match = data.match;
+        console.log("🎯 Nouveau match détecté :", match);
 
-          const result = await joinMatch(pendingMatch._id, {
-            title: teamSelected,
-            color: bgSelectedTeam,
-            textColor: textSelectedTeamColor,
-          });
+        // if (step === 6 && currentPlayer === 2) {
+        //   console.log("🔍 Recherche manuelle de match...");
+        //   fetchLatestWaitingMatch(); // on la crée maintenant
+        // }
+      });
 
-          if (result) {
-            setOppositionTeam(result.playerOneTeam.title);
-            setBgOppositionTeam(result.playerOneTeam.color);
-            setTextOppositionTeamColor(result.playerOneTeam.textColor);
-            setStep(7);
-          } else {
-            // joinMatch a déjà affiché le toast selon l’erreur
-            setStep(1);
-            setCurrentMatchId(null);
-          }
-        } catch (error) {
-          console.error("Join match error:", error);
-          Toast.show({
-            type: "error",
-            text1: "Unexpected error",
-            text2: "Something went wrong while joining the match.",
-          });
-          setStep(1);
-          setCurrentMatchId(null);
+      socket.on("match_joined", (data: any) => {
+        // S'assurer que c'est bien le joueur 1 qui est concerné
+        if (currentPlayer === 1 && data.match?.status === "in-progress") {
+          console.log("🎉 Un joueur a rejoint le match !");
+
+          setOppositionTeam(data.match.playerTwoTeam.title);
+          setBgOppositionTeam(data.match.playerTwoTeam.color);
+          setTextOppositionTeamColor(data.match.playerTwoTeam.textColor);
+
+          setWaitingForPlayer(false);
+          setCurrentMatchId(data.match._id);
+          setStep(7);
         }
-      };
+      });
+    };
 
-      tryJoinMatch();
+    setupSocket();
+
+    return () => {
+      if (socket) {
+        socket.off("new_match_created");
+        socket.off("match_joined");
+        socket.disconnect();
+      }
+    };
+  }, [step, currentPlayer, competition, matchDuration, createdMatchId]);
+
+  // Fonction qui essaye de rejoindre un match reçu via socket
+  const tryJoinMatch = async (match: any) => {
+    try {
+      setCurrentMatchId(match._id);
+
+      const result = await joinMatch(match._id, {
+        title: teamSelected!,
+        color: bgSelectedTeam!,
+        textColor: textSelectedTeamColor!,
+      });
+
+      if (result) {
+        setOppositionTeam(result.playerOneTeam.title);
+        setBgOppositionTeam(result.playerOneTeam.color);
+        setTextOppositionTeamColor(result.playerOneTeam.textColor);
+        setStep(7);
+      } else {
+        setStep(1);
+        setCurrentMatchId(null);
+      }
+    } catch (error) {
+      console.error("Join match error:", error);
+      Toast.show({
+        type: "error",
+        text1: "Unexpected error",
+        text2: "Something went wrong while joining the match.",
+      });
+      setStep(1);
+      setCurrentMatchId(null);
     }
-  }, [step, currentPlayer]);
+  };
 
-  const waitForSecondPlayer = async (matchId: any) => {
+  // Fonction d'attente côté joueur 1 pour que le joueur 2 rejoigne (polling)
+  const waitForSecondPlayer = async (matchId: string) => {
     setWaitingForPlayer(true);
     console.log("match id reçu", matchId);
 
@@ -167,6 +191,7 @@ const Home = () => {
     });
   };
 
+  // Création d'un match (joueur 1)
   const handleCreateMatch = async () => {
     if (
       !competition ||
@@ -194,14 +219,13 @@ const Home = () => {
     });
 
     if (result && result._id) {
+      setCreatedMatchId(result._id);
       setStep(7);
       try {
         await waitForSecondPlayer(result._id);
         setCurrentMatchId(result._id);
-        // Ici tu peux lancer la partie normalement
       } catch (error) {
         console.log("Match cancelled or no player joined:", error);
-        // Ici gestion complémentaire si besoin
       }
     } else {
       Toast.show({
@@ -212,6 +236,20 @@ const Home = () => {
       setStep(1);
       setWaitingForPlayer(false);
       setCurrentMatchId(null);
+    }
+  };
+
+  const fetchLatestWaitingMatch = async () => {
+    try {
+      const latest = await findFirstPendingMatch(competition, matchDuration);
+      if (latest) {
+        console.log("✅ Match trouvé manuellement :", latest._id);
+        tryJoinMatch(latest);
+      } else {
+        console.log("❌ Aucun match trouvé pour l'instant");
+      }
+    } catch (err) {
+      console.log("Erreur lors de la recherche de match :", err);
     }
   };
 
@@ -510,7 +548,8 @@ const Home = () => {
           })()}
         </>
       )}
-      {step === 5 && currentPlayer === 2 && (
+
+      {step === 5 && (
         <>
           <Text
             style={[
@@ -518,21 +557,21 @@ const Home = () => {
               { fontSize: 30, letterSpacing: 2 },
             ]}
           >
-            MULTIPLAYER MODE{`\n`}SELECT AN OPTION
+            MULTIPLAYER MODE{"\n"}SELECT AN OPTION
           </Text>
 
           <TouchableOpacity
             style={General_Style.playerNbBtn}
             onPress={() => {
-              setCurrentPlayer(1); // devenir créateur
-              // setStep(6); // va au choix de l'équipe adverse
-              handleCreateMatch();
+              setCurrentPlayer(1);
+              setStep(7); // on va vers la création → puis match créé côté step 7
+              handleCreateMatch(); // commence la création
             }}
           >
             <Text style={General_Style.playerNbTxt}>
-              CREATE MATCH{`\n`}
+              CREATE MATCH{"\n"}
               <Text style={{ fontWeight: "500", fontSize: 15 }}>
-                {"(be the first player)"}
+                (be the first player)
               </Text>
             </Text>
           </TouchableOpacity>
@@ -540,14 +579,15 @@ const Home = () => {
           <TouchableOpacity
             style={[General_Style.playerNbBtn, { top: height * 0.23 }]}
             onPress={() => {
-              setCurrentPlayer(2); // joueur secondaire
-              setStep(6); // va chercher un match existant
+              setCurrentPlayer(2);
+              setStep(6);
+              fetchLatestWaitingMatch();
             }}
           >
             <Text style={General_Style.playerNbTxt}>
-              JOIN MATCH{`\n`}
+              JOIN MATCH{"\n"}
               <Text style={{ fontWeight: "500", fontSize: 15 }}>
-                {"(find a pending match)"}
+                (find a pending match)
               </Text>
             </Text>
           </TouchableOpacity>
@@ -559,77 +599,77 @@ const Home = () => {
         </>
       )}
 
-      {step === 6 && (
-        <>
-          <Text
-            style={[
-              General_Style.titleHome,
-              { fontSize: 30, letterSpacing: 2 },
-            ]}
-          >
-            MULTIPLAYER MODE{`\n`}SELECT AN OPTION
-          </Text>
-
-          <TouchableOpacity
-            style={General_Style.playerNbBtn}
-            onPress={() => {
-              setCurrentPlayer(1); // joueur créateur
-              setStep(7); // aller au choix de l'équipe pour créer
-            }}
-          >
-            <Text style={General_Style.playerNbTxt}>
-              CREATE MATCH{`\n`}
-              <Text style={{ fontWeight: "500", fontSize: 15 }}>
-                {"(be the first player)"}
-              </Text>
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[General_Style.playerNbBtn, { top: height * 0.23 }]}
-            onPress={() => {
-              setCurrentPlayer(2); // joueur qui rejoint
-              setStep(7); // aller à la recherche de match
-            }}
-          >
-            <Text style={General_Style.playerNbTxt}>
-              JOIN MATCH{`\n`}
-              <Text style={{ fontWeight: "500", fontSize: 15 }}>
-                {"(find a pending match)"}
-              </Text>
-            </Text>
-          </TouchableOpacity>
-
-          <Image
-            source={require("../../assets/images/generals/ball.png")}
-            style={[General_Style.imgBall, { bottom: height * 0.08 }]}
+      {/* Step 6: Interface choix (joueur 2) */}
+      {step === 6 && currentPlayer === 2 && (
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 20,
+          }}
+        >
+          <LottieView
+            source={require("../../assets/lottie/loader.json")}
+            autoPlay
+            loop
+            style={{ width: 180, height: 180 }}
           />
-        </>
+          <Text
+            style={{
+              color: "#ffffff",
+              fontSize: 18,
+              marginTop: 20,
+              textAlign: "center",
+              fontWeight: "500",
+              lineHeight: 26,
+            }}
+          >
+            Waiting for available match to be created...
+          </Text>
+          <Text
+            style={{
+              color: "#ccc",
+              fontSize: 14,
+              marginTop: 10,
+              textAlign: "center",
+            }}
+          >
+            Please wait while we search for an available match to join.
+          </Text>
+        </View>
       )}
 
       {step === 7 && (
         <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 20,
+          }}
         >
           {waitingForPlayer ? (
-            <>
+            <View style={{ alignItems: "center" }}>
               <LottieView
                 source={require("../../assets/lottie/loader.json")}
                 autoPlay
                 loop
-                style={{ width: 200, height: 200 }}
+                style={{ width: 180, height: 180 }}
               />
               <Text
                 style={{
-                  color: "#fff",
+                  color: "#ffffff",
                   fontSize: 18,
                   marginTop: 20,
                   textAlign: "center",
+                  fontWeight: "500",
+                  lineHeight: 26,
                 }}
               >
-                Waiting for second player to join...
+                Waiting for the second player to join your match...
               </Text>
-            </>
+            </View>
           ) : (
             <Scoreboard
               step={step}
