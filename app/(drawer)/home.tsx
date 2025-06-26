@@ -3,7 +3,6 @@ import { teams as teamsData } from "@/constants/JSON/Teams";
 import {
   createMatch,
   findFirstPendingMatch,
-  getMatchById,
   joinMatch,
 } from "@/services/matchService";
 import { initializeSocket } from "@/utils/socket";
@@ -34,14 +33,13 @@ const Home = () => {
   const [waitingForPlayer, setWaitingForPlayer] = useState(false);
   const [createdMatchId, setCreatedMatchId] = useState(null);
   const [currentMatchId, setCurrentMatchId] = useState<any | null>();
-
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  // Setup socket once + listeners update when relevant states change
   useEffect(() => {
     let socket: any;
+
     const setupSocket = async () => {
       socket = await initializeSocket();
 
@@ -49,28 +47,33 @@ const Home = () => {
         console.log("✅ Connected to socket server");
       });
 
+      // Joueur 2 détecte un nouveau match
       socket.on("new_match_created", (data: any) => {
         const match = data.match;
-        console.log("🎯 Nouveau match détecté :", match);
 
-        // if (step === 6 && currentPlayer === 2) {
-        //   console.log("🔍 Recherche manuelle de match...");
-        //   fetchLatestWaitingMatch(); // on la crée maintenant
-        // }
+        if (
+          currentPlayer === 2 &&
+          match.competition === competition &&
+          match.duration === matchDuration &&
+          match.status === "waiting"
+        ) {
+          console.log("🎯 Nouveau match détecté par joueur 2");
+          tryJoinMatch(match);
+        }
       });
 
+      // Un joueur rejoint un match existant (notification au joueur 1)
       socket.on("match_joined", (data: any) => {
-        // S'assurer que c'est bien le joueur 1 qui est concerné
-        if (currentPlayer === 1 && data.match?.status === "in-progress") {
-          console.log("🎉 Un joueur a rejoint le match !");
+        const match = data.match;
 
-          setOppositionTeam(data.match.playerTwoTeam.title);
-          setBgOppositionTeam(data.match.playerTwoTeam.color);
-          setTextOppositionTeamColor(data.match.playerTwoTeam.textColor);
-
+        // Joueur 1 : l'autre vient de rejoindre → mise à jour UI
+        if (currentPlayer === 1 && match._id === createdMatchId) {
+          console.log("🎉 Joueur 2 a rejoint !");
+          setOppositionTeam(match.playerTwoTeam.title);
+          setBgOppositionTeam(match.playerTwoTeam.color);
+          setTextOppositionTeamColor(match.playerTwoTeam.textColor);
           setWaitingForPlayer(false);
-          setCurrentMatchId(data.match._id);
-          setStep(7);
+          setCurrentMatchId(match._id);
         }
       });
     };
@@ -86,7 +89,7 @@ const Home = () => {
     };
   }, [step, currentPlayer, competition, matchDuration, createdMatchId]);
 
-  // Fonction qui essaye de rejoindre un match reçu via socket
+  // 🔁 Fonction pour joindre un match côté joueur 2
   const tryJoinMatch = async (match: any) => {
     try {
       setCurrentMatchId(match._id);
@@ -103,95 +106,15 @@ const Home = () => {
         setTextOppositionTeamColor(result.playerOneTeam.textColor);
         setStep(7);
       } else {
-        setStep(1);
-        setCurrentMatchId(null);
+        resetToHome("Unable to join the match.");
       }
     } catch (error) {
       console.error("Join match error:", error);
-      Toast.show({
-        type: "error",
-        text1: "Unexpected error",
-        text2: "Something went wrong while joining the match.",
-      });
-      setStep(1);
-      setCurrentMatchId(null);
+      resetToHome("Something went wrong while joining the match.");
     }
   };
 
-  // Fonction d'attente côté joueur 1 pour que le joueur 2 rejoigne (polling)
-  const waitForSecondPlayer = async (matchId: string) => {
-    setWaitingForPlayer(true);
-    console.log("match id reçu", matchId);
-
-    return new Promise((resolve, reject) => {
-      let attempts = 0;
-      const interval = setInterval(async () => {
-        try {
-          const match = await getMatchById(matchId);
-
-          if (!match) {
-            clearInterval(interval);
-            Toast.show({
-              type: "error",
-              text1: "Match not found",
-              text2: "The match could not be retrieved.",
-            });
-            setStep(1);
-            setWaitingForPlayer(false);
-            reject("Match not found");
-            return;
-          }
-
-          if (match.status === "in-progress") {
-            clearInterval(interval);
-            setWaitingForPlayer(false);
-            console.log("✅ Second player joined.");
-            resolve(match);
-            return;
-          }
-
-          if (match.status === "cancelled") {
-            clearInterval(interval);
-            Toast.show({
-              type: "info",
-              text1: "Match cancelled",
-              text2: "No player joined. Match was automatically cancelled.",
-            });
-            setStep(1);
-            setWaitingForPlayer(false);
-            reject("Match cancelled");
-            return;
-          }
-
-          attempts++;
-          if (attempts >= 6) {
-            clearInterval(interval);
-            Toast.show({
-              type: "info",
-              text1: "No one joined",
-              text2: "Timeout reached. Returning to home.",
-            });
-            setStep(1);
-            setWaitingForPlayer(false);
-            reject("Timeout reached");
-            return;
-          }
-        } catch (error) {
-          clearInterval(interval);
-          Toast.show({
-            type: "error",
-            text1: "Error fetching match",
-            text2: "Unable to retrieve match data.",
-          });
-          setStep(1);
-          setWaitingForPlayer(false);
-          reject(error);
-        }
-      }, 5000);
-    });
-  };
-
-  // Création d'un match (joueur 1)
+  // ✅ Créer un match côté joueur 1
   const handleCreateMatch = async () => {
     if (
       !competition ||
@@ -208,49 +131,55 @@ const Home = () => {
       return;
     }
 
-    const result = await createMatch({
-      competition,
-      duration: matchDuration,
-      playerOneTeam: {
-        title: teamSelected,
-        color: bgSelectedTeam,
-        textColor: textSelectedTeamColor,
-      },
-    });
-
-    if (result && result._id) {
-      setCreatedMatchId(result._id);
-      setStep(7);
-      try {
-        await waitForSecondPlayer(result._id);
-        setCurrentMatchId(result._id);
-      } catch (error) {
-        console.log("Match cancelled or no player joined:", error);
-      }
-    } else {
-      Toast.show({
-        type: "error",
-        text1: "Match creation failed",
-        text2: "Unable to create match. Please try again.",
+    try {
+      const result = await createMatch({
+        competition,
+        duration: matchDuration,
+        playerOneTeam: {
+          title: teamSelected,
+          color: bgSelectedTeam,
+          textColor: textSelectedTeamColor,
+        },
       });
-      setStep(1);
-      setWaitingForPlayer(false);
-      setCurrentMatchId(null);
+
+      if (result && result._id) {
+        setCreatedMatchId(result._id);
+        setCurrentMatchId(result._id);
+        setWaitingForPlayer(true);
+        setStep(7);
+      } else {
+        resetToHome("Unable to create match.");
+      }
+    } catch (error) {
+      resetToHome("Match creation failed.");
     }
   };
 
+  // 🔍 Rechercher un match existant (joueur 2)
   const fetchLatestWaitingMatch = async () => {
     try {
       const latest = await findFirstPendingMatch(competition, matchDuration);
       if (latest) {
-        console.log("✅ Match trouvé manuellement :", latest._id);
+        console.log("✅ Match trouvé :", latest._id);
         tryJoinMatch(latest);
       } else {
-        console.log("❌ Aucun match trouvé pour l'instant");
+        console.log("❌ Aucun match en attente");
       }
     } catch (err) {
-      console.log("Erreur lors de la recherche de match :", err);
+      console.log("Erreur recherche match :", err);
     }
+  };
+
+  // 🔄 Fonction de reset en cas d'erreur
+  const resetToHome = (message: string) => {
+    Toast.show({
+      type: "error",
+      text1: "Error",
+      text2: message,
+    });
+    setStep(1);
+    setCurrentMatchId(null);
+    setWaitingForPlayer(false);
   };
 
   return (
