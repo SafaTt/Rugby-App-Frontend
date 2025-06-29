@@ -1,5 +1,6 @@
 import { General_Style } from "@/constants/General_Style";
 import { teams as teamsData } from "@/constants/JSON/Teams";
+import { Quizz } from "@/constants/quiz";
 import {
   createMatch,
   findFirstPendingMatch,
@@ -9,9 +10,10 @@ import { initializeSocket } from "@/utils/socket";
 import { Image, ImageBackground } from "expo-image";
 import { useNavigation } from "expo-router";
 import LottieView from "lottie-react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dimensions, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
+import QuestionBox from "./QuestionBox";
 import Scoreboard from "./scoreboard";
 
 const { width, height } = Dimensions.get("window");
@@ -33,6 +35,11 @@ const Home = () => {
   const [waitingForPlayer, setWaitingForPlayer] = useState(false);
   const [createdMatchId, setCreatedMatchId] = useState(null);
   const [currentMatchId, setCurrentMatchId] = useState<any | null>();
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [showQuestion, setShowQuestion] = useState(false);
+  const timerRef = useRef<any>(null);
+  const socketRef = useRef<any>(null);
+
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
@@ -42,15 +49,24 @@ const Home = () => {
 
     const setupSocket = async () => {
       socket = await initializeSocket();
+      socketRef.current = socket;
 
       socket.on("connect", () => {
         console.log("✅ Connected to socket server");
+
+        if (currentPlayer === 1 && createdMatchId) {
+          console.log("👤 Joueur 1 rejoint sa propre room");
+          socket.emit("join_match_room", createdMatchId);
+        }
+
+        if (currentPlayer === 2 && currentMatchId) {
+          console.log("👤 Joueur 2 rejoint la room");
+          socket.emit("join_match_room", currentMatchId);
+        }
       });
 
-      // Joueur 2 détecte un nouveau match
       socket.on("new_match_created", (data: any) => {
         const match = data.match;
-
         if (
           currentPlayer === 2 &&
           match.competition === competition &&
@@ -62,11 +78,8 @@ const Home = () => {
         }
       });
 
-      // Un joueur rejoint un match existant (notification au joueur 1)
       socket.on("match_joined", (data: any) => {
         const match = data.match;
-
-        // Joueur 1 : l'autre vient de rejoindre → mise à jour UI
         if (currentPlayer === 1 && match._id === createdMatchId) {
           console.log("🎉 Joueur 2 a rejoint !");
           setOppositionTeam(match.playerTwoTeam.title);
@@ -76,6 +89,13 @@ const Home = () => {
           setCurrentMatchId(match._id);
         }
       });
+
+      socket.on("quiz_start", (data: any) => {
+        console.log("🔥 Quiz starting!");
+        setShowQuestion(true);
+        setCurrentQuestionIndex(0); // Reset au début du quiz
+        startQuestionTimer();
+      });
     };
 
     setupSocket();
@@ -84,10 +104,11 @@ const Home = () => {
       if (socket) {
         socket.off("new_match_created");
         socket.off("match_joined");
+        socket.off("quiz_start");
         socket.disconnect();
       }
     };
-  }, [step, currentPlayer, competition, matchDuration, createdMatchId]);
+  }, [currentPlayer, competition, matchDuration, createdMatchId]);
 
   // 🔁 Fonction pour joindre un match côté joueur 2
   const tryJoinMatch = async (match: any) => {
@@ -105,6 +126,7 @@ const Home = () => {
         setBgOppositionTeam(result.playerOneTeam.color);
         setTextOppositionTeamColor(result.playerOneTeam.textColor);
         setStep(7);
+        socketRef.current?.emit("join_match_room", match._id);
       } else {
         resetToHome("Unable to join the match.");
       }
@@ -147,6 +169,8 @@ const Home = () => {
         setCurrentMatchId(result._id);
         setWaitingForPlayer(true);
         setStep(7);
+
+        socketRef.current?.emit("join_match_room", result._id);
       } else {
         resetToHome("Unable to create match.");
       }
@@ -162,6 +186,7 @@ const Home = () => {
       if (latest) {
         console.log("✅ Match trouvé :", latest._id);
         tryJoinMatch(latest);
+        socketRef.current?.emit("join_match_room", latest._id);
       } else {
         console.log("❌ Aucun match en attente");
       }
@@ -180,6 +205,33 @@ const Home = () => {
     setStep(1);
     setCurrentMatchId(null);
     setWaitingForPlayer(false);
+  };
+
+  const startQuestionTimer = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      goToNextQuestion();
+    }, 10000); // 10 secondes par question
+  };
+
+  const goToNextQuestion = () => {
+    setCurrentQuestionIndex((prev) => {
+      const nextIndex = prev + 1;
+      if (nextIndex < Quizz.length) {
+        startQuestionTimer();
+        return nextIndex;
+      } else {
+        setShowQuestion(false); // Fin du quiz
+        return prev;
+      }
+    });
+  };
+
+  const handleAnswer = (choiceKey: string) => {
+    clearTimeout(timerRef.current);
+    const currentQuestion = Quizz[currentQuestionIndex];
+    // await updateMatchWithQuestion(...)
+    goToNextQuestion();
   };
 
   return (
@@ -600,12 +652,22 @@ const Home = () => {
               </Text>
             </View>
           ) : (
-            <Scoreboard
-              step={step}
-              matchId={currentMatchId}
-              scoreUserOne={scoreUserOne}
-              scoreUserTwo={scoreUserTwo}
-            />
+            <View>
+              <Scoreboard
+                step={step}
+                matchId={currentMatchId}
+                scoreUserOne={scoreUserOne}
+                scoreUserTwo={scoreUserTwo}
+              />
+
+              {showQuestion && currentQuestionIndex < Quizz.length && (
+                <QuestionBox
+                  question={Quizz[currentQuestionIndex].question}
+                  choices={Quizz[currentQuestionIndex].choices}
+                  onSelect={handleAnswer}
+                />
+              )}
+            </View>
           )}
         </View>
       )}
