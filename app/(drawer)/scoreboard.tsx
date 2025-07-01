@@ -1,22 +1,20 @@
 import { General_Style } from "@/constants/General_Style";
-import { getMatchById } from "@/services/matchService";
+import { fetchMatchScores, getMatchById } from "@/services/matchService";
 import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
+
 interface ScoreboardProps {
   step: number;
   matchId: string;
-  scoreUserOne: any;
-  scoreUserTwo: any;
 }
 
-const Scoreboard: React.FC<ScoreboardProps> = ({
-  step,
-  matchId,
-  scoreUserOne,
-  scoreUserTwo,
-}) => {
+const Scoreboard: React.FC<ScoreboardProps> = ({ step, matchId }) => {
   const [match, setMatch] = useState<any>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
+
+  // Nouveaux états pour les scores
+  const [scoreUserOne, setScoreUserOne] = useState<number>(0);
+  const [scoreUserTwo, setScoreUserTwo] = useState<number>(0);
 
   useEffect(() => {
     const fetchMatch = async () => {
@@ -29,6 +27,23 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
 
     if (matchId && step === 7) {
       fetchMatch();
+    }
+  }, [matchId, step]);
+
+  // Fetch scores dès que matchId et step === 7
+  useEffect(() => {
+    const fetchScores = async () => {
+      try {
+        const scores = await fetchMatchScores(matchId);
+        setScoreUserOne(scores.scoreUserOne);
+        setScoreUserTwo(scores.scoreUserTwo);
+      } catch (error) {
+        console.error("Erreur récupération scores initiaux:", error);
+      }
+    };
+
+    if (matchId && step === 7) {
+      fetchScores();
     }
   }, [matchId, step]);
 

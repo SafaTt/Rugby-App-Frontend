@@ -4,6 +4,7 @@ import { Quizz } from "@/constants/quiz";
 import {
   createMatch,
   findFirstPendingMatch,
+  getQuizQuestions,
   joinMatch,
 } from "@/services/matchService";
 import { initializeSocket } from "@/utils/socket";
@@ -39,6 +40,22 @@ const Home = () => {
   const [showQuestion, setShowQuestion] = useState(false);
   const timerRef = useRef<any>(null);
   const socketRef = useRef<any>(null);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const data = await getQuizQuestions();
+        setQuestions(data);
+      } catch (error) {
+        console.error("Erreur récupération questions :", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuestions();
+  }, []);
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -656,16 +673,13 @@ const Home = () => {
               <Scoreboard
                 step={step}
                 matchId={currentMatchId}
-                scoreUserOne={scoreUserOne}
-                scoreUserTwo={scoreUserTwo}
+                // scoreUserOne={scoreUserOne}
+                // scoreUserTwo={scoreUserTwo}
               />
 
               {showQuestion && currentQuestionIndex < Quizz.length && (
-                <QuestionBox
-                  question={Quizz[currentQuestionIndex].question}
-                  choices={Quizz[currentQuestionIndex].choices}
-                  onSelect={handleAnswer}
-                />
+<QuestionBox matchId={currentMatchId} />
+
               )}
             </View>
           )}

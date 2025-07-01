@@ -1,4 +1,4 @@
-import { PIUBLIC_URI } from "@/utils/config";
+import { PUBLIC_URI } from "@/utils/config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Toast from "react-native-toast-message";
@@ -12,7 +12,7 @@ export const findFirstPendingMatch = async (
     console.log("Compétition envoyée :", competition, "Durée :", duration);
 
     const res = await axios.post(
-      `${PIUBLIC_URI}/api/match/pending-first`,
+      `${PUBLIC_URI}/api/match/pending-first`,
       { competition, duration },
       {
         headers: {
@@ -41,7 +41,7 @@ export const joinMatch = async (matchId: any, playerTwoTeam: any) => {
     const token = await AsyncStorage.getItem("token");
 
     const res = await axios.put(
-      `${PIUBLIC_URI}/api/match/join/${matchId}`,
+      `${PUBLIC_URI}/api/match/join/${matchId}`,
       { playerTwoTeam },
       {
         headers: {
@@ -103,7 +103,7 @@ export const createMatch = async ({
     const token = await AsyncStorage.getItem("token");
 
     const res = await axios.post(
-      `${PIUBLIC_URI}/api/match/create`,
+      `${PUBLIC_URI}/api/match/create`,
       {
         competition,
         duration,
@@ -129,17 +129,94 @@ export const createMatch = async ({
 export const getMatchById = async (matchId: string) => {
   try {
     const token = await AsyncStorage.getItem("token");
-    const res = await axios.get(
-      `${PIUBLIC_URI}/api/match/getMatch/${matchId}`,
+    const res = await axios.get(`${PUBLIC_URI}/api/match/getMatch/${matchId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.data;
+  } catch (error) {
+    console.log("Erreur récupération match:", error);
+    return null;
+  }
+};
+
+export const answerQuestion = async (
+  id: string,
+  questionData: {
+    question: {
+      text: string;
+      options: string[];
+      correctOption: string;
+    };
+    selectedOption: string;
+  }
+) => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+
+    const response = await axios.put(
+      `${PUBLIC_URI}/api/match/${id}/question`,
+      questionData,
       {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }
     );
-    return res.data;
-  } catch (error) {
-    console.log("Erreur récupération match:", error);
-    return null;
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Erreur lors de l'envoi de la réponse"
+    );
   }
+};
+
+export const fetchMatchScores = async (matchId: string) => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) throw new Error("Token introuvable");
+
+    const response = await axios.get(
+      `${PUBLIC_URI}/api/match/calcul-score/${matchId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data; // { scoreUserOne, scoreUserTwo }
+  } catch (error: any) {
+    console.error("Erreur fetchMatchScores:", error);
+    throw new Error(
+      error.response?.data?.message ||
+        "Erreur lors de la récupération des scores"
+    );
+  }
+};
+
+export const getQuizQuestions = async () => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    const response = await axios.get(`${PUBLIC_URI}/api/match/quiz`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; // tableau des questions
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message ||
+        "Erreur lors de la récupération des questions"
+    );
+  }
+};
+
+export const getNextQuestion = async (id: string) => {
+  const token = await AsyncStorage.getItem("token");
+  const response = await axios.get(`${PUBLIC_URI}/api/match/${id}/next-question`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
 };
