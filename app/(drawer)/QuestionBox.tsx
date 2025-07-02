@@ -16,6 +16,30 @@ const QuestionBox: React.FC<Props> = ({ matchId }) => {
   const [isAnswered, setIsAnswered] = useState(false);
   const socket = getSocket();
 
+  useEffect(() => {
+    if (socket && matchId) {
+      socket.emit("request_current_question", { matchId });
+    }
+  }, []);
+
+  // 🎧 Réception de la question via socket
+  useEffect(() => {
+    const handleNextQuestion = (data: any) => {
+      console.log("📩 Question reçue via socket:", data);
+      setQuestion({
+        text: data.question.text,
+        options: data.question.choices,
+        correctOption: data.question.correctAnswer,
+      });
+      setIsAnswered(false);
+    };
+
+    socket.on("next_question", handleNextQuestion);
+    return () => {
+      socket.off("next_question", handleNextQuestion);
+    };
+  }, []);
+
   // ⏱ Gestion du timer
   useEffect(() => {
     if (!question || isAnswered) return;
@@ -33,24 +57,6 @@ const QuestionBox: React.FC<Props> = ({ matchId }) => {
 
     return () => clearInterval(interval);
   }, [question, isAnswered]);
-
-  // 🎧 Réception de la question via socket
-  useEffect(() => {
-    const handleNextQuestion = (data: any) => {
-      setQuestion({
-        text: data.question.text,
-        options: data.question.choices,
-        correctOption: data.question.correctAnswer,
-      });
-      setIsAnswered(false);
-    };
-
-    socket.on("next_question", handleNextQuestion);
-    return () => {
-      socket.off("next_question", handleNextQuestion);
-    };
-  }, []);
-
   // 📤 Soumettre une réponse
   const handleSelect = async (selectedKey: string) => {
     if (isAnswered || !question) return;

@@ -31,8 +31,6 @@ const Home = () => {
   const [textSelectedTeamColor, setTextSelectedTeamColor] = useState<string>();
   const [textOppositionTeamColor, setTextOppositionTeamColor] =
     useState<string>();
-  const [scoreUserOne, setScoreUserOne] = useState<null | number>(0);
-  const [scoreUserTwo, setScoreUserTwo] = useState<null | number>(0);
   const [waitingForPlayer, setWaitingForPlayer] = useState(false);
   const [createdMatchId, setCreatedMatchId] = useState(null);
   const [currentMatchId, setCurrentMatchId] = useState<any | null>();
@@ -42,6 +40,8 @@ const Home = () => {
   const socketRef = useRef<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [timer, setTimer] = useState(10);
+  const [isAnswered, setIsAnswered] = useState(false);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -72,13 +72,13 @@ const Home = () => {
         console.log("✅ Connected to socket server");
 
         if (currentPlayer === 1 && createdMatchId) {
-          console.log("👤 Joueur 1 rejoint sa propre room");
           socket.emit("join_match_room", createdMatchId);
+          console.log("👤 Joueur 1 rejoint sa propre room");
         }
 
         if (currentPlayer === 2 && currentMatchId) {
-          console.log("👤 Joueur 2 rejoint la room");
           socket.emit("join_match_room", currentMatchId);
+          console.log("👤 Joueur 2 rejoint sa propre room");
         }
       });
 
@@ -104,6 +104,8 @@ const Home = () => {
           setTextOppositionTeamColor(match.playerTwoTeam.textColor);
           setWaitingForPlayer(false);
           setCurrentMatchId(match._id);
+
+          socket.emit("match_joined", { match });
         }
       });
 
@@ -122,6 +124,7 @@ const Home = () => {
         socket.off("new_match_created");
         socket.off("match_joined");
         socket.off("quiz_start");
+
         socket.disconnect();
       }
     };
@@ -188,6 +191,7 @@ const Home = () => {
         setStep(7);
 
         socketRef.current?.emit("join_match_room", result._id);
+        socketRef.current?.emit("quiz_start", { matchId: result._id });
       } else {
         resetToHome("Unable to create match.");
       }
@@ -670,17 +674,9 @@ const Home = () => {
             </View>
           ) : (
             <View>
-              <Scoreboard
-                step={step}
-                matchId={currentMatchId}
-                // scoreUserOne={scoreUserOne}
-                // scoreUserTwo={scoreUserTwo}
-              />
+              <Scoreboard step={step} matchId={currentMatchId} />
 
-              {showQuestion && currentQuestionIndex < Quizz.length && (
-<QuestionBox matchId={currentMatchId} />
-
-              )}
+              {showQuestion && <QuestionBox matchId={currentMatchId} />}
             </View>
           )}
         </View>
