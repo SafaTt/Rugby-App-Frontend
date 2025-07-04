@@ -25,7 +25,7 @@ const QuestionBox: React.FC<Props> = ({ matchId }) => {
   // 🎧 Réception de la question via socket
   useEffect(() => {
     const handleNextQuestion = (data: any) => {
-      console.log("📩 Question reçue via socket:", data);
+      // console.log("📩 Question reçue via socket:", data);
       setQuestion({
         text: data.question.text,
         options: data.question.choices,

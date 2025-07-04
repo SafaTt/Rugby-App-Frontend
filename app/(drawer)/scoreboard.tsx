@@ -1,5 +1,6 @@
 import { General_Style } from "@/constants/General_Style";
 import { fetchMatchScores, getMatchById } from "@/services/matchService";
+import { getSocket } from "@/utils/socket";
 import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 
@@ -11,10 +12,9 @@ interface ScoreboardProps {
 const Scoreboard: React.FC<ScoreboardProps> = ({ step, matchId }) => {
   const [match, setMatch] = useState<any>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
-
-  // Nouveaux états pour les scores
   const [scoreUserOne, setScoreUserOne] = useState<number>(0);
   const [scoreUserTwo, setScoreUserTwo] = useState<number>(0);
+  const socket = getSocket();
 
   useEffect(() => {
     const fetchMatch = async () => {
@@ -30,7 +30,6 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ step, matchId }) => {
     }
   }, [matchId, step]);
 
-  // Fetch scores dès que matchId et step === 7
   useEffect(() => {
     const fetchScores = async () => {
       try {
@@ -46,6 +45,23 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ step, matchId }) => {
       fetchScores();
     }
   }, [matchId, step]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleScoreUpdate = (data: any) => {
+      if (data.matchId === matchId) {
+        setScoreUserOne(data.scoreUserOne);
+        setScoreUserTwo(data.scoreUserTwo);
+      }
+    };
+
+    socket.on("score_updated", handleScoreUpdate);
+
+    return () => {
+      socket.off("score_updated", handleScoreUpdate);
+    };
+  }, [socket, matchId]);
 
   const getInitialSeconds = (duration: string) => {
     if (duration === "4 MINUTES") return 4 * 60;
