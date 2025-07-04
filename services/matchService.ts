@@ -146,7 +146,7 @@ export const answerQuestion = async (
   questionData: {
     question: {
       text: string;
-      options: string[];
+      options: string[] | Record<string, string>;
       correctOption: string;
     };
     selectedOption: string;
@@ -215,8 +215,11 @@ export const getQuizQuestions = async () => {
 
 export const getNextQuestion = async (id: string) => {
   const token = await AsyncStorage.getItem("token");
-  const response = await axios.get(`${PUBLIC_URI}/api/match/${id}/next-question`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const response = await axios.get(
+    `${PUBLIC_URI}/api/match/${id}/next-question`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
   return response.data;
 };

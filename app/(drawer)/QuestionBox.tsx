@@ -57,7 +57,6 @@ const QuestionBox: React.FC<Props> = ({ matchId }) => {
 
     return () => clearInterval(interval);
   }, [question, isAnswered]);
-  // 📤 Soumettre une réponse
   const handleSelect = async (selectedKey: string) => {
     if (isAnswered || !question) return;
     setIsAnswered(true);
@@ -69,7 +68,7 @@ const QuestionBox: React.FC<Props> = ({ matchId }) => {
       await answerQuestion(matchId, {
         question: {
           text: question.text,
-          options: Object.keys(question.options),
+          options: question.options, // <-- ici on envoie l'objet complet des options
           correctOption: question.correctOption,
         },
         selectedOption: selectedKey,

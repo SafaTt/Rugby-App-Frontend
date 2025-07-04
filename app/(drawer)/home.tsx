@@ -1,10 +1,8 @@
 import { General_Style } from "@/constants/General_Style";
 import { teams as teamsData } from "@/constants/JSON/Teams";
-import { Quizz } from "@/constants/quiz";
 import {
   createMatch,
   findFirstPendingMatch,
-  getQuizQuestions,
   joinMatch,
 } from "@/services/matchService";
 import { initializeSocket } from "@/utils/socket";
@@ -38,24 +36,9 @@ const Home = () => {
   const [showQuestion, setShowQuestion] = useState(false);
   const timerRef = useRef<any>(null);
   const socketRef = useRef<any>(null);
-  const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [timer, setTimer] = useState(10);
   const [isAnswered, setIsAnswered] = useState(false);
-
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const data = await getQuizQuestions();
-        setQuestions(data);
-      } catch (error) {
-        console.error("Erreur récupération questions :", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchQuestions();
-  }, []);
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -99,21 +82,16 @@ const Home = () => {
         const match = data.match;
         if (currentPlayer === 1 && match._id === createdMatchId) {
           console.log("🎉 Joueur 2 a rejoint !");
-          setOppositionTeam(match.playerTwoTeam.title);
-          setBgOppositionTeam(match.playerTwoTeam.color);
-          setTextOppositionTeamColor(match.playerTwoTeam.textColor);
           setWaitingForPlayer(false);
           setCurrentMatchId(match._id);
-
-          socket.emit("match_joined", { match });
         }
       });
 
       socket.on("quiz_start", (data: any) => {
         console.log("🔥 Quiz starting!");
         setShowQuestion(true);
-        setCurrentQuestionIndex(0); // Reset au début du quiz
-        startQuestionTimer();
+        setCurrentQuestionIndex(0);
+        socket.emit("request_current_question", { matchId: data.matchId });
       });
     };
 
@@ -146,7 +124,7 @@ const Home = () => {
         setBgOppositionTeam(result.playerOneTeam.color);
         setTextOppositionTeamColor(result.playerOneTeam.textColor);
         setStep(7);
-        socketRef.current?.emit("join_match_room", match._id);
+        socketRef.current?.emit("match_joined", { match });
       } else {
         resetToHome("Unable to join the match.");
       }
@@ -191,7 +169,6 @@ const Home = () => {
         setStep(7);
 
         socketRef.current?.emit("join_match_room", result._id);
-        socketRef.current?.emit("quiz_start", { matchId: result._id });
       } else {
         resetToHome("Unable to create match.");
       }
@@ -226,33 +203,6 @@ const Home = () => {
     setStep(1);
     setCurrentMatchId(null);
     setWaitingForPlayer(false);
-  };
-
-  const startQuestionTimer = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      goToNextQuestion();
-    }, 10000); // 10 secondes par question
-  };
-
-  const goToNextQuestion = () => {
-    setCurrentQuestionIndex((prev) => {
-      const nextIndex = prev + 1;
-      if (nextIndex < Quizz.length) {
-        startQuestionTimer();
-        return nextIndex;
-      } else {
-        setShowQuestion(false); // Fin du quiz
-        return prev;
-      }
-    });
-  };
-
-  const handleAnswer = (choiceKey: string) => {
-    clearTimeout(timerRef.current);
-    const currentQuestion = Quizz[currentQuestionIndex];
-    // await updateMatchWithQuestion(...)
-    goToNextQuestion();
   };
 
   return (
