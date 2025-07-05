@@ -1,9 +1,11 @@
 import { General_Style } from "@/constants/General_Style";
 import { fetchMatchScores, getMatchById } from "@/services/matchService";
 import { getSocket } from "@/utils/socket";
+import LottieView from "lottie-react-native";
 import React, { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { Dimensions, Text, View } from "react-native";
 
+const { width, height } = Dimensions.get("window");
 interface ScoreboardProps {
   step: number;
   matchId: string;
@@ -14,6 +16,8 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ step, matchId }) => {
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [scoreUserOne, setScoreUserOne] = useState<number>(0);
   const [scoreUserTwo, setScoreUserTwo] = useState<number>(0);
+  const [matchFinished, setMatchFinished] = useState(false);
+
   const socket = getSocket();
 
   useEffect(() => {
@@ -73,7 +77,14 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ step, matchId }) => {
   useEffect(() => {
     if (step === 7 && secondsLeft > 0) {
       const interval = setInterval(() => {
-        setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
+        setSecondsLeft((prev) => {
+          const newTime = prev > 0 ? prev - 1 : 0;
+          if (newTime === 0) {
+            setMatchFinished(true); // ✅ Marquer la fin du match
+            socket.emit("end_match", { matchId }); // (optionnel) prévenir le backend
+          }
+          return newTime;
+        });
       }, 1000);
       return () => clearInterval(interval);
     }
@@ -86,6 +97,112 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ step, matchId }) => {
   };
 
   if (step !== 7 || !match) return null;
+  if (step !== 7 || !match) return null;
+
+  if (matchFinished) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#FFFAE5", // jaune pastel
+          padding: 24,
+          borderRadius: 20,
+          margin: 20,
+          elevation: 5,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.3,
+          shadowRadius: 6,
+          borderWidth: 4,
+          borderColor: "#FFD700", // doré
+        }}
+      >
+        {/* 🎆 Animation Lottie */}
+        <LottieView
+          source={require("../../assets/lottie/fireworks.json")}
+          autoPlay
+          loop
+          style={{ width: 180, height: 180, marginBottom: 10 }}
+        />
+
+        {/* 🏁 Titre */}
+        <Text
+          style={{
+            fontSize: 36,
+            fontWeight: "bold",
+            color: "#FF5733",
+            marginBottom: 10,
+          }}
+        >
+          🎉 Match terminé !
+        </Text>
+
+        {/* 🏆 Sous-titre */}
+        <Text style={{ fontSize: 22, marginBottom: 20, color: "#333" }}>
+          Voici vos scores :
+        </Text>
+
+        {/* 🎯 Scores */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-around",
+            alignItems: "center",
+            width: "100%",
+            marginBottom: 10,
+            gap: 40,
+          }}
+        >
+          <View style={{ alignItems: "center" }}>
+            <Text style={{ fontSize: 20, color: "#007AFF" }}>
+              {match.playerOneTeam.title}
+            </Text>
+            <Text
+              style={{
+                fontSize: 32,
+                fontWeight: "bold",
+                color: "#007AFF",
+                marginTop: 4,
+              }}
+            >
+              {scoreUserOne} ⭐
+            </Text>
+          </View>
+
+          <View style={{ alignItems: "center" }}>
+            <Text style={{ fontSize: 20, color: "#FF2D55" }}>
+              {match.playerTwoTeam.title}
+            </Text>
+            <Text
+              style={{
+                fontSize: 32,
+                fontWeight: "bold",
+                color: "#FF2D55",
+                marginTop: 4,
+              }}
+            >
+              {scoreUserTwo} 🌟
+            </Text>
+          </View>
+        </View>
+
+        {/* 👋 Message de fin */}
+        <Text
+          style={{
+            fontSize: 20,
+            marginTop: 30,
+            color: "#4CD964",
+            fontWeight: "600",
+            textAlign: "center",
+          }}
+        >
+          Merci d’avoir joué avec nous ! 🥳
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, alignItems: "center" }}>

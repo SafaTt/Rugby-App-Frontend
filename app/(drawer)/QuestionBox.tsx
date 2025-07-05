@@ -1,8 +1,10 @@
 import { answerQuestion } from "@/services/matchService";
 import { getSocket } from "@/utils/socket";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useState } from "react";
+import LottieView from "lottie-react-native";
+import React, { useEffect, useRef, useState } from "react";
 import { Alert, Dimensions, Text, TouchableOpacity, View } from "react-native";
+import timerAnimation from "../../assets/lottie/timer.json";
 
 const { height } = Dimensions.get("window");
 
@@ -15,6 +17,7 @@ const QuestionBox: React.FC<Props> = ({ matchId }) => {
   const [timer, setTimer] = useState(10);
   const [isAnswered, setIsAnswered] = useState(false);
   const socket = getSocket();
+  const lottieRef = useRef<LottieView>(null);
 
   useEffect(() => {
     if (socket && matchId) {
@@ -32,6 +35,10 @@ const QuestionBox: React.FC<Props> = ({ matchId }) => {
         correctOption: data.question.correctAnswer,
       });
       setIsAnswered(false);
+      setTimeout(() => {
+        lottieRef.current?.reset();
+        lottieRef.current?.play();
+      }, 50);
     };
 
     socket.on("next_question", handleNextQuestion);
@@ -57,6 +64,7 @@ const QuestionBox: React.FC<Props> = ({ matchId }) => {
 
     return () => clearInterval(interval);
   }, [question, isAnswered]);
+
   const handleSelect = async (selectedKey: string) => {
     if (isAnswered || !question) return;
     setIsAnswered(true);
@@ -94,7 +102,7 @@ const QuestionBox: React.FC<Props> = ({ matchId }) => {
           borderColor: "#8e8b8b",
           borderRadius: 10,
           padding: 16,
-          marginBottom: height * 0.3,
+          marginBottom: height * 0.4,
         }}
       >
         <Text style={{ fontWeight: "bold", fontSize: 20, textAlign: "center" }}>
@@ -114,7 +122,7 @@ const QuestionBox: React.FC<Props> = ({ matchId }) => {
           flexWrap: "wrap",
           justifyContent: "space-between",
           position: "absolute",
-          bottom: height * 0.1,
+          bottom: height * 0.15,
         }}
       >
         {Object.entries(question.options).map(([key, value]) => (
@@ -142,16 +150,18 @@ const QuestionBox: React.FC<Props> = ({ matchId }) => {
 
       {/* Timer */}
       <View style={{ alignItems: "center" }}>
-        <Text
+        <LottieView
+          ref={lottieRef}
+          source={timerAnimation}
+          autoPlay
+          loop={false}
+          duration={10000}
           style={{
-            fontSize: 18,
-            fontWeight: "bold",
-            color: "#d00000",
             bottom: height * 0.03,
+            width: 50,
+            height: 50,
           }}
-        >
-          {timer} s
-        </Text>
+        />
       </View>
     </View>
   );
