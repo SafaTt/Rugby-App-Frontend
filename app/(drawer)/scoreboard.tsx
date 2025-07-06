@@ -68,7 +68,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ step, matchId }) => {
   }, [socket, matchId]);
 
   const getInitialSeconds = (duration: string) => {
-    if (duration === "4 MINUTES") return 4 * 60;
+    if (duration === "4 MINUTES") return 0.5 * 60;
     if (duration === "6 MINUTES") return 6 * 60;
     if (duration === "10 MINUTES") return 10 * 60;
     return 0;
@@ -106,100 +106,118 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ step, matchId }) => {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#FFFAE5", // jaune pastel
-          padding: 24,
-          borderRadius: 20,
-          margin: 20,
-          elevation: 5,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.3,
-          shadowRadius: 6,
-          borderWidth: 4,
-          borderColor: "#FFD700", // doré
+          backgroundColor: "transparent",
+          paddingHorizontal: 16,
+          zIndex: 10,
+          top: height * 0.3,
         }}
       >
-        {/* 🎆 Animation Lottie */}
-        <LottieView
-          source={require("../../assets/lottie/fireworks.json")}
-          autoPlay
-          loop
-          style={{ width: 180, height: 180, marginBottom: 10 }}
-        />
-
-        {/* 🏁 Titre */}
-        <Text
-          style={{
-            fontSize: 36,
-            fontWeight: "bold",
-            color: "#FF5733",
-            marginBottom: 10,
-          }}
-        >
-          🎉 Match terminé !
-        </Text>
-
-        {/* 🏆 Sous-titre */}
-        <Text style={{ fontSize: 22, marginBottom: 20, color: "#333" }}>
-          Voici vos scores :
-        </Text>
-
-        {/* 🎯 Scores */}
         <View
           style={{
-            flexDirection: "row",
-            justifyContent: "space-around",
+            backgroundColor: "#E0F7FA", // bleu pastel
+            padding: 24,
+            borderRadius: 20,
+            elevation: 5,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.4,
+            borderWidth: 4,
+            borderColor: "#00BFFF", // bleu clair
             alignItems: "center",
             width: "100%",
-            marginBottom: 10,
-            gap: 40,
           }}
         >
-          <View style={{ alignItems: "center" }}>
-            <Text style={{ fontSize: 20, color: "#007AFF" }}>
-              {match.playerOneTeam.title}
-            </Text>
-            <Text
-              style={{
-                fontSize: 32,
-                fontWeight: "bold",
-                color: "#007AFF",
-                marginTop: 4,
-              }}
-            >
-              {scoreUserOne} ⭐
-            </Text>
+          {/* 🎇 Animation Lottie */}
+          <LottieView
+            source={require("../../assets/lottie/fireworks.json")}
+            autoPlay
+            loop
+            style={{ width: 200, height: 200, marginBottom: 20 }}
+          />
+
+          {/* 🎉 Titre */}
+          <Text
+            style={{
+              fontSize: 36,
+              fontWeight: "bold",
+              color: "#007AFF",
+              marginBottom: 10,
+              textAlign: "center",
+            }}
+          >
+            Well done, friends!
+          </Text>
+
+          {/* 🎮 Sous-titre */}
+          <Text
+            style={{
+              fontSize: 22,
+              marginBottom: 20,
+              color: "#333",
+              textAlign: "center",
+            }}
+          >
+            The match is over!
+          </Text>
+
+          {/* 🏆 Scores */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-around",
+              alignItems: "center",
+              width: "100%",
+              marginBottom: 10,
+              gap: 40,
+            }}
+          >
+            <View style={{ alignItems: "center" }}>
+              <Text style={{ fontSize: 20, color: "#007AFF" }}>
+                {match.playerOneTeam.title}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 32,
+                  fontWeight: "bold",
+                  color: "#007AFF",
+                  marginTop: 4,
+                }}
+              >
+                {scoreUserOne} 💙
+              </Text>
+            </View>
+
+            <View style={{ alignItems: "center" }}>
+              <Text style={{ fontSize: 20, color: "#00BFFF" }}>
+                {match.playerTwoTeam.title}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 32,
+                  fontWeight: "bold",
+                  color: "#00BFFF",
+                  marginTop: 4,
+                }}
+              >
+                {scoreUserTwo} 💙
+              </Text>
+            </View>
           </View>
 
-          <View style={{ alignItems: "center" }}>
-            <Text style={{ fontSize: 20, color: "#FF2D55" }}>
-              {match.playerTwoTeam.title}
-            </Text>
-            <Text
-              style={{
-                fontSize: 32,
-                fontWeight: "bold",
-                color: "#FF2D55",
-                marginTop: 4,
-              }}
-            >
-              {scoreUserTwo} 🌟
-            </Text>
-          </View>
+          {/* 👋 Message final */}
+          <Text
+            style={{
+              fontSize: 20,
+              marginTop: 30,
+              color: "#00796B",
+              fontWeight: "600",
+              textAlign: "center",
+            }}
+          >
+            Thank you for participating in the quiz!{"\n"}
+            {"\n"}🎈
+          </Text>
         </View>
-
-        {/* 👋 Message de fin */}
-        <Text
-          style={{
-            fontSize: 20,
-            marginTop: 30,
-            color: "#4CD964",
-            fontWeight: "600",
-            textAlign: "center",
-          }}
-        >
-          Merci d’avoir joué avec nous ! 🥳
-        </Text>
       </View>
     );
   }
