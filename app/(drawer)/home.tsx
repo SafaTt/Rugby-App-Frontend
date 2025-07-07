@@ -93,6 +93,11 @@ const Home = () => {
         setCurrentQuestionIndex(0);
         socket.emit("request_current_question", { matchId: data.matchId });
       });
+
+      socket.on("match_finished", (data: any) => {
+        console.log("🏁 Match terminé depuis Home UI");
+        setShowQuestion(false);
+      });
     };
 
     setupSocket();

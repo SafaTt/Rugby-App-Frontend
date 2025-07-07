@@ -224,10 +224,10 @@ export const getNextQuestion = async (id: string) => {
   return response.data;
 };
 
-export const markMatchAsFinished = async () => {
+export const markMatchAsFinished = async (matchId: any) => {
   try {
     const response = await axios.patch(
-      `${PUBLIC_URI}/api/match/:matchId/finish`
+      `${PUBLIC_URI}/api/match/${matchId}/finish`
     );
   } catch (error: any) {
     throw new Error(

@@ -1,5 +1,9 @@
 import { General_Style } from "@/constants/General_Style";
-import { fetchMatchScores, getMatchById } from "@/services/matchService";
+import {
+  fetchMatchScores,
+  getMatchById,
+  markMatchAsFinished,
+} from "@/services/matchService";
 import { getSocket } from "@/utils/socket";
 import LottieView from "lottie-react-native";
 import React, { useEffect, useRef, useState } from "react";
@@ -33,6 +37,13 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
       if (result) {
         setMatch(result);
         setSecondsLeft(getInitialSeconds(result.duration));
+
+        // 🔴 Nouveau : détecte isFinished
+        if (result.isFinished && !hasEmittedEnd.current) {
+          hasEmittedEnd.current = true;
+          setMatchFinished(true);
+          socket.emit("end_match", { matchId });
+        }
       }
     };
 
@@ -90,6 +101,11 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
             hasEmittedEnd.current = true;
             setMatchFinished(true);
             socket.emit("end_match", { matchId });
+
+            // APPEL DE LA MISE À JOUR BACKEND
+            markMatchAsFinished(matchId).catch((err) => {
+              console.error("Erreur mise à jour match fini :", err);
+            });
           }
           return newTime;
         });
@@ -101,17 +117,6 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   useEffect(() => {
     if (matchFinished) {
       setShowMatchFinishedUI(true);
-
-      // Cache l'affichage après 3 secondes
-      const timer = setTimeout(() => {
-        setShowMatchFinishedUI(false);
-        console.log("match fini");
-        if (onMatchEnd) {
-          onMatchEnd();
-        }
-      }, 5000);
-
-      return () => clearTimeout(timer);
     }
   }, [matchFinished]);
 
@@ -134,7 +139,6 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
           backgroundColor: "transparent",
           paddingHorizontal: 16,
           zIndex: 10,
-          top: height * 0.3,
         }}
       >
         <View

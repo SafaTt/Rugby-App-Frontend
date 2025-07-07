@@ -21,46 +21,44 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
   const lottieRef = useRef<LottieView>(null);
   const [isMatchFinished, setIsMatchFinished] = useState(false);
 
-  // ✅ Gérer la réception de "match_finished" en priorité
+  // 🏁 Gestion de la fin de match
   useEffect(() => {
-    const handleMatchFinished = (data: any) => {
+    const handleMatchFinished = () => {
       console.log("✅ Match terminé reçu via socket");
       setIsMatchFinished(true);
-      setQuestion(null); // Ne plus afficher la question
+      setQuestion(null);
       setIsAnswered(true);
 
-      // 🔁 Déclencher la fermeture ou la navigation
       setTimeout(() => {
         if (onMatchEnd) onMatchEnd();
-      }, 3000);
+      }, 5000);
     };
 
     socket.on("match_finished", handleMatchFinished);
-    return () => socket.off("match_finished", handleMatchFinished);
+    return () => {
+      socket.off("match_finished", handleMatchFinished);
+    };
   }, []);
 
-  useEffect(() => {
-    if (!isVisible) {
-      setQuestion(null);
-    }
-  }, [isVisible]);
-
+  // 📥 Récupération de la question courante
   useEffect(() => {
     if (socket && matchId && !isMatchFinished && isVisible) {
       socket.emit("request_current_question", { matchId });
     }
-  }, [socket, matchId, isMatchFinished]);
+  }, [socket, matchId, isMatchFinished, isVisible]);
 
-  // 🎧 Réception de la question via socket
+  // 🎧 Réception des questions
   useEffect(() => {
     const handleNextQuestion = (data: any) => {
-      // console.log("📩 Question reçue via socket:", data);
+      if (isMatchFinished || !isVisible) return; // 🚫 Bloquer réception si terminé ou invisible
+
       setQuestion({
         text: data.question.text,
         options: data.question.choices,
         correctOption: data.question.correctAnswer,
       });
       setIsAnswered(false);
+
       setTimeout(() => {
         lottieRef.current?.reset();
         lottieRef.current?.play();
@@ -71,8 +69,9 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
     return () => {
       socket.off("next_question", handleNextQuestion);
     };
-  }, []);
+  }, [isMatchFinished, isVisible]);
 
+  // ✅ Réponse du joueur
   const handleSelect = async (selectedKey: string) => {
     if (isAnswered || !question) return;
     setIsAnswered(true);
@@ -84,21 +83,18 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
       await answerQuestion(matchId, {
         question: {
           text: question.text,
-          options: question.options, // <-- ici on envoie l'objet complet des options
+          options: question.options,
           correctOption: question.correctOption,
         },
         selectedOption: selectedKey,
       });
-
-      // La prochaine question sera reçue via le socket `next_question`
     } catch (err: any) {
       Alert.alert("Erreur", err.message);
     }
   };
 
-  if (!question) return null;
-  if (isMatchFinished) return null;
-  if (!isVisible) return null;
+  // 🚫 Rien à afficher si non visible, match terminé ou aucune question
+  if (!isVisible || isMatchFinished || !question) return null;
 
   return (
     <View
