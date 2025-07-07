@@ -7,7 +7,7 @@ import {
 } from "@/services/matchService";
 import { initializeSocket } from "@/utils/socket";
 import { Image, ImageBackground } from "expo-image";
-import { useNavigation } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import LottieView from "lottie-react-native";
 import { useEffect, useRef, useState } from "react";
 import { Dimensions, Text, TouchableOpacity, View } from "react-native";
@@ -186,6 +186,12 @@ const Home = () => {
         tryJoinMatch(latest);
         socketRef.current?.emit("join_match_room", latest._id);
       } else {
+        setStep(0);
+        Toast.show({
+          type: "info",
+          text1: "Info",
+          text2: "No pending matches right now!",
+        });
         console.log("❌ Aucun match en attente");
       }
     } catch (err) {
@@ -203,6 +209,14 @@ const Home = () => {
     setStep(1);
     setCurrentMatchId(null);
     setWaitingForPlayer(false);
+  };
+
+  const handleMatchEnd = () => {
+    setShowQuestion(false);
+    setStep(0);
+    setTimeout(() => {
+      router.replace("/(drawer)/home");
+    }, 100);
   };
 
   return (
@@ -624,9 +638,19 @@ const Home = () => {
             </View>
           ) : (
             <View>
-              <Scoreboard step={step} matchId={currentMatchId} />
+              <Scoreboard
+                step={step}
+                matchId={currentMatchId}
+                onMatchEnd={handleMatchEnd}
+              />
 
-              {showQuestion && <QuestionBox matchId={currentMatchId} />}
+              {showQuestion && (
+                <QuestionBox
+                  matchId={currentMatchId}
+                  onMatchEnd={handleMatchEnd}
+                  isVisible={showQuestion}
+                />
+              )}
             </View>
           )}
         </View>

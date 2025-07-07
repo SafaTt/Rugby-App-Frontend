@@ -223,3 +223,16 @@ export const getNextQuestion = async (id: string) => {
   );
   return response.data;
 };
+
+export const markMatchAsFinished = async () => {
+  try {
+    const response = await axios.patch(
+      `${PUBLIC_URI}/api/match/:matchId/finish`
+    );
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message ||
+        "Erreur lors de la récupération des questions"
+    );
+  }
+};

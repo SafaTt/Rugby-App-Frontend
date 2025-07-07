@@ -10,20 +10,46 @@ const { height } = Dimensions.get("window");
 
 interface Props {
   matchId: string;
+  onMatchEnd?: () => void;
+  isVisible?: boolean;
 }
 
-const QuestionBox: React.FC<Props> = ({ matchId }) => {
+const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
   const [question, setQuestion] = useState<any>(null);
-  const [timer, setTimer] = useState(10);
   const [isAnswered, setIsAnswered] = useState(false);
   const socket = getSocket();
   const lottieRef = useRef<LottieView>(null);
+  const [isMatchFinished, setIsMatchFinished] = useState(false);
+
+  // ✅ Gérer la réception de "match_finished" en priorité
+  useEffect(() => {
+    const handleMatchFinished = (data: any) => {
+      console.log("✅ Match terminé reçu via socket");
+      setIsMatchFinished(true);
+      setQuestion(null); // Ne plus afficher la question
+      setIsAnswered(true);
+
+      // 🔁 Déclencher la fermeture ou la navigation
+      setTimeout(() => {
+        if (onMatchEnd) onMatchEnd();
+      }, 3000);
+    };
+
+    socket.on("match_finished", handleMatchFinished);
+    return () => socket.off("match_finished", handleMatchFinished);
+  }, []);
 
   useEffect(() => {
-    if (socket && matchId) {
+    if (!isVisible) {
+      setQuestion(null);
+    }
+  }, [isVisible]);
+
+  useEffect(() => {
+    if (socket && matchId && !isMatchFinished && isVisible) {
       socket.emit("request_current_question", { matchId });
     }
-  }, []);
+  }, [socket, matchId, isMatchFinished]);
 
   // 🎧 Réception de la question via socket
   useEffect(() => {
@@ -46,24 +72,6 @@ const QuestionBox: React.FC<Props> = ({ matchId }) => {
       socket.off("next_question", handleNextQuestion);
     };
   }, []);
-
-  // ⏱ Gestion du timer
-  useEffect(() => {
-    if (!question || isAnswered) return;
-
-    setTimer(10); // reset timer à chaque nouvelle question
-    const interval = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          handleSelect("null"); // auto-réponse
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [question, isAnswered]);
 
   const handleSelect = async (selectedKey: string) => {
     if (isAnswered || !question) return;
@@ -89,6 +97,8 @@ const QuestionBox: React.FC<Props> = ({ matchId }) => {
   };
 
   if (!question) return null;
+  if (isMatchFinished) return null;
+  if (!isVisible) return null;
 
   return (
     <View

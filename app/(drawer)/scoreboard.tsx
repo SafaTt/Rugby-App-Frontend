@@ -2,21 +2,28 @@ import { General_Style } from "@/constants/General_Style";
 import { fetchMatchScores, getMatchById } from "@/services/matchService";
 import { getSocket } from "@/utils/socket";
 import LottieView from "lottie-react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, Text, View } from "react-native";
 
 const { width, height } = Dimensions.get("window");
 interface ScoreboardProps {
   step: number;
   matchId: string;
+  onMatchEnd?: () => void;
 }
 
-const Scoreboard: React.FC<ScoreboardProps> = ({ step, matchId }) => {
+const Scoreboard: React.FC<ScoreboardProps> = ({
+  step,
+  matchId,
+  onMatchEnd,
+}) => {
   const [match, setMatch] = useState<any>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [scoreUserOne, setScoreUserOne] = useState<number>(0);
   const [scoreUserTwo, setScoreUserTwo] = useState<number>(0);
   const [matchFinished, setMatchFinished] = useState(false);
+  const hasEmittedEnd = useRef(false);
+  const [showMatchFinishedUI, setShowMatchFinishedUI] = useState(false);
 
   const socket = getSocket();
 
@@ -79,9 +86,10 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ step, matchId }) => {
       const interval = setInterval(() => {
         setSecondsLeft((prev) => {
           const newTime = prev > 0 ? prev - 1 : 0;
-          if (newTime === 0) {
-            setMatchFinished(true); // ✅ Marquer la fin du match
-            socket.emit("end_match", { matchId }); // (optionnel) prévenir le backend
+          if (newTime === 0 && !hasEmittedEnd.current) {
+            hasEmittedEnd.current = true;
+            setMatchFinished(true);
+            socket.emit("end_match", { matchId });
           }
           return newTime;
         });
@@ -89,6 +97,23 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ step, matchId }) => {
       return () => clearInterval(interval);
     }
   }, [step, secondsLeft]);
+
+  useEffect(() => {
+    if (matchFinished) {
+      setShowMatchFinishedUI(true);
+
+      // Cache l'affichage après 3 secondes
+      const timer = setTimeout(() => {
+        setShowMatchFinishedUI(false);
+        console.log("match fini");
+        if (onMatchEnd) {
+          onMatchEnd();
+        }
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [matchFinished]);
 
   const formatTime = (secs: number) => {
     const minutes = Math.floor(secs / 60);
@@ -99,7 +124,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ step, matchId }) => {
   if (step !== 7 || !match) return null;
   if (step !== 7 || !match) return null;
 
-  if (matchFinished) {
+  if (showMatchFinishedUI) {
     return (
       <View
         style={{
