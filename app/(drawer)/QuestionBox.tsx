@@ -1,3 +1,4 @@
+import { getUserId } from "@/services/authService";
 import { answerQuestion } from "@/services/matchService";
 import { getSocket } from "@/utils/socket";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -17,65 +18,120 @@ interface Props {
 const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
   const [question, setQuestion] = useState<any>(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [isMatchFinished, setIsMatchFinished] = useState(false);
+  const [isConversion, setIsConversion] = useState(false);
+  const [conversionPlayerId, setConversionPlayerId] = useState<string | null>(
+    null
+  );
+  const [userId, setUserId] = useState<string | null>(null);
+
   const socket = getSocket();
   const lottieRef = useRef<LottieView>(null);
-  const [isMatchFinished, setIsMatchFinished] = useState(false);
 
-  // 🏁 Gestion de la fin de match
+  // Utiliser un ref pour garder userId à jour dans les callbacks
+  const userIdRef = useRef<string | null>(null);
+
+  // Récupérer userId depuis token
+  // ...
+  useEffect(() => {
+    const fetchAndSetUserId = async () => {
+      const id = await getUserId();
+      setUserId(id);
+      console.log("user iddd", id);
+
+      userIdRef.current = id;
+    };
+
+    fetchAndSetUserId();
+  }, []);
+  // Mettre à jour le ref à chaque changement de userId
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
+
   useEffect(() => {
     const handleMatchFinished = () => {
-      console.log("✅ Match terminé reçu via socket");
       setIsMatchFinished(true);
       setQuestion(null);
       setIsAnswered(true);
-
       setTimeout(() => {
         if (onMatchEnd) onMatchEnd();
       }, 5000);
     };
 
-    socket.on("match_finished", handleMatchFinished);
-    return () => {
-      socket.off("match_finished", handleMatchFinished);
-    };
-  }, []);
-
-  // 📥 Récupération de la question courante
-  useEffect(() => {
-    if (socket && matchId && !isMatchFinished && isVisible) {
-      socket.emit("request_current_question", { matchId });
-    }
-  }, [socket, matchId, isMatchFinished, isVisible]);
-
-  // 🎧 Réception des questions
-  useEffect(() => {
     const handleNextQuestion = (data: any) => {
-      if (isMatchFinished || !isVisible) return; // 🚫 Bloquer réception si terminé ou invisible
-
+      if (isMatchFinished || !isVisible) return;
+      setIsConversion(false);
       setQuestion({
         text: data.question.text,
         options: data.question.choices,
         correctOption: data.question.correctAnswer,
       });
       setIsAnswered(false);
-
       setTimeout(() => {
         lottieRef.current?.reset();
         lottieRef.current?.play();
       }, 50);
     };
 
-    socket.on("next_question", handleNextQuestion);
-    return () => {
-      socket.off("next_question", handleNextQuestion);
-    };
-  }, [isMatchFinished, isVisible]);
+    const handleConversionQuestion = (data: any) => {
+      console.log(
+        "🎯 Conversion reçue pour :",
+        data.playerId,
+        " | Moi :",
+        userIdRef.current
+      );
 
-  // ✅ Réponse du joueur
+      setIsConversion(true);
+      setConversionPlayerId(data.playerId);
+      setQuestion({
+        text: data.question.text,
+        options: data.question.choices,
+        correctOption: data.question.correctAnswer,
+      });
+      setIsAnswered(false);
+      setTimeout(() => {
+        lottieRef.current?.reset();
+        lottieRef.current?.play();
+      }, 50);
+    };
+
+    const handleConversionResult = (data: any) => {
+      if (data.playerId === userIdRef.current) {
+        Alert.alert(
+          "Conversion",
+          data.success
+            ? "CONVERSION SUCCESSFUL 🎉"
+            : "CONVERSION UNSUCCESSFUL ❌"
+        );
+      }
+    };
+
+    socket.on("match_finished", handleMatchFinished);
+    socket.on("next_question", handleNextQuestion);
+    socket.on("conversion_question", handleConversionQuestion);
+    socket.on("conversion_result", handleConversionResult);
+
+    return () => {
+      socket.off("match_finished", handleMatchFinished);
+      socket.off("next_question", handleNextQuestion);
+      socket.off("conversion_question", handleConversionQuestion);
+      socket.off("conversion_result", handleConversionResult);
+    };
+  }, [socket, isVisible, isMatchFinished]);
+
+  useEffect(() => {
+    if (socket && matchId && !isMatchFinished && isVisible) {
+      socket.emit("request_current_question", { matchId });
+    }
+  }, [socket, matchId, isMatchFinished, isVisible]);
+
   const handleSelect = async (selectedKey: string) => {
     if (isAnswered || !question) return;
-    setIsAnswered(true);
 
+    if (isConversion && conversionPlayerId !== userIdRef.current) return;
+
+    setIsAnswered(true);
     const token = await AsyncStorage.getItem("token");
     if (!token) return Alert.alert("Erreur", "Token non trouvé !");
 
@@ -93,14 +149,14 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
     }
   };
 
-  // 🚫 Rien à afficher si non visible, match terminé ou aucune question
   if (!isVisible || isMatchFinished || !question) return null;
+  const isNotAllowedToAnswer =
+    isAnswered || (isConversion && userIdRef.current !== conversionPlayerId);
 
   return (
     <View
       style={{ padding: 16, alignItems: "center", justifyContent: "center" }}
     >
-      {/* Question */}
       <View
         style={{
           backgroundColor: "rgba(228, 228, 228, 0.8)",
@@ -116,7 +172,6 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
         </Text>
       </View>
 
-      {/* Options */}
       <View
         style={{
           backgroundColor: "rgba(228, 228, 228, 0.8)",
@@ -135,7 +190,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
           <TouchableOpacity
             key={key}
             onPress={() => handleSelect(key)}
-            disabled={isAnswered}
+            disabled={isNotAllowedToAnswer}
             style={{
               backgroundColor: "#fff",
               borderWidth: 1,
@@ -144,17 +199,16 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
               padding: 10,
               marginBottom: 10,
               width: "48%",
-              opacity: isAnswered ? 0.6 : 1,
+              opacity: isNotAllowedToAnswer ? 0.6 : 1,
             }}
           >
-            <Text style={{ fontSize: 16, textAlign: "center" }}>
-              {`${key}: ${value}`}
-            </Text>
+            <Text
+              style={{ fontSize: 16, textAlign: "center" }}
+            >{`${key}: ${value}`}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Timer */}
       <View style={{ alignItems: "center" }}>
         <LottieView
           ref={lottieRef}
@@ -169,6 +223,33 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
           }}
         />
       </View>
+
+      {isConversion && conversionPlayerId === userIdRef.current && (
+        <View
+          style={{
+            position: "absolute",
+            top: height * 0.35,
+            backgroundColor: "#fff",
+            paddingVertical: 12,
+            paddingHorizontal: 20,
+            borderRadius: 10,
+            borderWidth: 2,
+            borderColor: "green",
+            zIndex: 10,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: "bold",
+              color: "green",
+              textAlign: "center",
+            }}
+          >
+            CONVERSION TIME ⚽️
+          </Text>
+        </View>
+      )}
     </View>
   );
 };

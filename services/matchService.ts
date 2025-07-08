@@ -102,6 +102,8 @@ export const createMatch = async ({
   try {
     const token = await AsyncStorage.getItem("token");
 
+    console.log("token token", token);
+
     const res = await axios.post(
       `${PUBLIC_URI}/api/match/create`,
       {

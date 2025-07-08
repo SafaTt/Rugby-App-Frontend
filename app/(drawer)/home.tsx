@@ -14,6 +14,7 @@ import { Dimensions, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import QuestionBox from "./QuestionBox";
 import Scoreboard from "./scoreboard";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 const Home = () => {
@@ -34,11 +35,7 @@ const Home = () => {
   const [currentMatchId, setCurrentMatchId] = useState<any | null>();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showQuestion, setShowQuestion] = useState(false);
-  const timerRef = useRef<any>(null);
   const socketRef = useRef<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [timer, setTimer] = useState(10);
-  const [isAnswered, setIsAnswered] = useState(false);
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
