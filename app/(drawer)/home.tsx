@@ -76,10 +76,17 @@ const Home = () => {
 
       socket.on("match_joined", (data: any) => {
         const match = data.match;
+
         if (currentPlayer === 1 && match._id === createdMatchId) {
           console.log("🎉 Joueur 2 a rejoint !");
           setWaitingForPlayer(false);
           setCurrentMatchId(match._id);
+        }
+
+        if (currentPlayer === 2 && match._id === currentMatchId) {
+          console.log("✅ Confirmation de jointure pour joueur 2");
+          setStep(7); // ou l'étape de démarrage souhaitée
+          setShowQuestion(false); // ou true si tu veux afficher la question après
         }
       });
 
