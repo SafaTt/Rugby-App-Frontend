@@ -20,7 +20,7 @@ const SplashScreen = () => {
         console.error("Erreur vérification auto-login :", error);
         router.replace("../(login)/signIn");
       }
-    }, 2000);
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, []);

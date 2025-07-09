@@ -12,10 +12,9 @@ const { height } = Dimensions.get("window");
 interface Props {
   matchId: string;
   onMatchEnd?: () => void;
-  isVisible?: boolean;
 }
 
-const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
+const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
   const [question, setQuestion] = useState<any>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [isMatchFinished, setIsMatchFinished] = useState(false);
@@ -60,7 +59,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
     };
 
     const handleNextQuestion = (data: any) => {
-      if (isMatchFinished || !isVisible) return;
+      if (isMatchFinished) return;
       setIsConversion(false);
       setQuestion({
         text: data.question.text,
@@ -81,6 +80,11 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
         " | Moi :",
         userIdRef.current
       );
+
+      if (!data.playerId) {
+        console.warn("⚠️ conversion_question reçu sans playerId !");
+        return; // ignore cet event mal formé
+      }
 
       setIsConversion(true);
       setConversionPlayerId(data.playerId);
@@ -118,22 +122,35 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
       socket.off("conversion_question", handleConversionQuestion);
       socket.off("conversion_result", handleConversionResult);
     };
-  }, [socket, isVisible, isMatchFinished]);
+  }, [socket, isMatchFinished]);
 
   useEffect(() => {
-    if (socket && matchId && !isMatchFinished && isVisible) {
+    if (socket && matchId && !isMatchFinished) {
       socket.emit("request_current_question", { matchId });
     }
-  }, [socket, matchId, isMatchFinished, isVisible]);
+  }, [socket, matchId, isMatchFinished]);
 
   const handleSelect = async (selectedKey: string) => {
-    if (isAnswered || !question) return;
+    console.log("handleSelect called with:", selectedKey);
+    if (isAnswered || !question) {
+      console.log("Blocked: isAnswered or no question");
+      return;
+    }
 
-    if (isConversion && conversionPlayerId !== userIdRef.current) return;
+    if (
+      isConversion &&
+      `${conversionPlayerId}`.trim() !== `${userIdRef.current}`.trim()
+    ) {
+      console.log("Blocked: not the converting player");
+      return;
+    }
 
     setIsAnswered(true);
     const token = await AsyncStorage.getItem("token");
-    if (!token) return Alert.alert("Erreur", "Token non trouvé !");
+    if (!token) {
+      Alert.alert("Erreur", "Token non trouvé !");
+      return;
+    }
 
     try {
       await answerQuestion(matchId, {
@@ -144,19 +161,60 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
         },
         selectedOption: selectedKey,
       });
+      console.log("Réponse envoyée avec succès");
     } catch (err: any) {
+      console.log("Erreur dans answerQuestion:", err);
       Alert.alert("Erreur", err.message);
     }
   };
 
-  if (!isVisible || isMatchFinished || !question) return null;
+  console.log("🧪 DEBUG : isConversion=", isConversion);
+  console.log("🧪 conversionPlayerId=", conversionPlayerId);
+  console.log("🧪 userIdRef.current=", userIdRef.current);
+
+  if (isMatchFinished || !question) return null;
   const isNotAllowedToAnswer =
-    isAnswered || (isConversion && userIdRef.current !== conversionPlayerId);
+    isAnswered ||
+    (isConversion &&
+      `${userIdRef.current}`.trim() !== `${conversionPlayerId}`.trim());
+  console.log("🧪 isNotAllowedToAnswer =", isNotAllowedToAnswer);
 
   return (
     <View
       style={{ padding: 16, alignItems: "center", justifyContent: "center" }}
     >
+      {isConversion && (
+        <View
+          style={{
+            marginBottom: height * 0.01,
+            padding: 10,
+            borderRadius: 8,
+            width: "100%",
+            right: 10,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 20,
+              fontWeight: "bold",
+              color: "#FFD700",
+              textAlign: "center",
+            }}
+          >
+            CONVERSION ATTEMPT ⚽️
+          </Text>
+          <Text
+            style={{
+              fontSize: 14,
+              color: "#e3b11a",
+              textAlign: "center",
+              marginTop: 4,
+            }}
+          >
+            ONLY THE TEAM SCORING CAN ATTEMPT TO ANSWER THE QUESTION
+          </Text>
+        </View>
+      )}
       <View
         style={{
           backgroundColor: "rgba(228, 228, 228, 0.8)",
@@ -164,7 +222,8 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
           borderColor: "#8e8b8b",
           borderRadius: 10,
           padding: 16,
-          marginBottom: height * 0.4,
+          marginBottom: height * 0.35,
+          alignItems: "center",
         }}
       >
         <Text style={{ fontWeight: "bold", fontSize: 20, textAlign: "center" }}>
@@ -223,33 +282,6 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd, isVisible }) => {
           }}
         />
       </View>
-
-      {isConversion && conversionPlayerId === userIdRef.current && (
-        <View
-          style={{
-            position: "absolute",
-            top: height * 0.35,
-            backgroundColor: "#fff",
-            paddingVertical: 12,
-            paddingHorizontal: 20,
-            borderRadius: 10,
-            borderWidth: 2,
-            borderColor: "green",
-            zIndex: 10,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "bold",
-              color: "green",
-              textAlign: "center",
-            }}
-          >
-            CONVERSION TIME ⚽️
-          </Text>
-        </View>
-      )}
     </View>
   );
 };

@@ -14,7 +14,6 @@ import { Dimensions, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import QuestionBox from "./QuestionBox";
 import Scoreboard from "./scoreboard";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 const Home = () => {
@@ -650,7 +649,6 @@ const Home = () => {
                 <QuestionBox
                   matchId={currentMatchId}
                   onMatchEnd={handleMatchEnd}
-                  isVisible={showQuestion}
                 />
               )}
             </View>
