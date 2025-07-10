@@ -150,6 +150,7 @@ export const answerQuestion = async (
       text: string;
       options: string[] | Record<string, string>;
       correctOption: string;
+      isConversion: Boolean;
     };
     selectedOption: string;
   }

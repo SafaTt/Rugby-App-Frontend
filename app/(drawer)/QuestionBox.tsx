@@ -30,8 +30,6 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
   // Utiliser un ref pour garder userId à jour dans les callbacks
   const userIdRef = useRef<string | null>(null);
 
-  // Récupérer userId depuis token
-  // ...
   useEffect(() => {
     const fetchAndSetUserId = async () => {
       const id = await getUserId();
@@ -43,6 +41,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
 
     fetchAndSetUserId();
   }, []);
+
   // Mettre à jour le ref à chaque changement de userId
   useEffect(() => {
     userIdRef.current = userId;
@@ -59,6 +58,8 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     };
 
     const handleNextQuestion = (data: any) => {
+      console.log("📥 Nouvelle question reçue :", data.question);
+
       if (isMatchFinished) return;
       setIsConversion(false);
       setQuestion({
@@ -67,6 +68,9 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
         correctOption: data.question.correctAnswer,
       });
       setIsAnswered(false);
+      console.log(
+        "✅ Nouvelle question reçue, isAnswered réinitialisé à false"
+      );
       setTimeout(() => {
         lottieRef.current?.reset();
         lottieRef.current?.play();
@@ -94,6 +98,9 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
         correctOption: data.question.correctAnswer,
       });
       setIsAnswered(false);
+      console.log(
+        "✅ Question de conversion reçue, isAnswered réinitialisé à false"
+      );
       setTimeout(() => {
         lottieRef.current?.reset();
         lottieRef.current?.play();
@@ -131,21 +138,23 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
   }, [socket, matchId, isMatchFinished]);
 
   const handleSelect = async (selectedKey: string) => {
-    console.log("handleSelect called with:", selectedKey);
     if (isAnswered || !question) {
-      console.log("Blocked: isAnswered or no question");
+      console.log("⛔ Blocked: Already answered or no question");
       return;
     }
 
+    // Verrouillage immédiat AVANT async
+    setIsAnswered(true);
+
+    // Protéger contre mauvaises conversions
     if (
       isConversion &&
       `${conversionPlayerId}`.trim() !== `${userIdRef.current}`.trim()
     ) {
-      console.log("Blocked: not the converting player");
+      console.log("⛔ Blocked: not the converting player");
       return;
     }
 
-    setIsAnswered(true);
     const token = await AsyncStorage.getItem("token");
     if (!token) {
       Alert.alert("Erreur", "Token non trouvé !");
@@ -158,12 +167,13 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
           text: question.text,
           options: question.options,
           correctOption: question.correctOption,
+          isConversion: isConversion,
         },
         selectedOption: selectedKey,
       });
-      console.log("Réponse envoyée avec succès");
+      console.log("✅ Réponse envoyée avec succès");
     } catch (err: any) {
-      console.log("Erreur dans answerQuestion:", err);
+      console.log("❌ Erreur dans answerQuestion:", err);
       Alert.alert("Erreur", err.message);
     }
   };

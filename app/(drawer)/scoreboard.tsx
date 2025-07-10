@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, Text, View } from "react-native";
 
 const { width, height } = Dimensions.get("window");
+
 interface ScoreboardProps {
   step: number;
   matchId: string;
@@ -38,7 +39,6 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
         setMatch(result);
         setSecondsLeft(getInitialSeconds(result.duration));
 
-        // 🔴 Nouveau : détecte isFinished
         if (result.isFinished && !hasEmittedEnd.current) {
           hasEmittedEnd.current = true;
           setMatchFinished(true);
@@ -68,6 +68,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
     }
   }, [matchId, step]);
 
+  // ✅ Mise à jour du score à chaque événement "score_updated"
   useEffect(() => {
     if (!socket) return;
 
@@ -79,7 +80,6 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
     };
 
     socket.on("score_updated", handleScoreUpdate);
-
     return () => {
       socket.off("score_updated", handleScoreUpdate);
     };
@@ -102,7 +102,6 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
             setMatchFinished(true);
             socket.emit("end_match", { matchId });
 
-            // APPEL DE LA MISE À JOUR BACKEND
             markMatchAsFinished(matchId).catch((err) => {
               console.error("Erreur mise à jour match fini :", err);
             });
@@ -126,7 +125,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
-  if (step !== 7 || !match) return null;
+  // ✅ Déplace la condition ici à la fin pour ne pas bloquer les effets
   if (step !== 7 || !match) return null;
 
   if (showMatchFinishedUI) {
@@ -143,7 +142,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
       >
         <View
           style={{
-            backgroundColor: "#E0F7FA", // bleu pastel
+            backgroundColor: "#E0F7FA",
             padding: 24,
             borderRadius: 20,
             elevation: 5,
@@ -151,20 +150,17 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
             shadowOffset: { width: 0, height: 3 },
             shadowOpacity: 0.4,
             borderWidth: 4,
-            borderColor: "#00BFFF", // bleu clair
+            borderColor: "#00BFFF",
             alignItems: "center",
             width: "100%",
           }}
         >
-          {/* 🎇 Animation Lottie */}
           <LottieView
             source={require("../../assets/lottie/fireworks.json")}
             autoPlay
             loop
             style={{ width: 200, height: 200, marginBottom: 20 }}
           />
-
-          {/* 🎉 Titre */}
           <Text
             style={{
               fontSize: 36,
@@ -176,8 +172,6 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
           >
             Well done, friends!
           </Text>
-
-          {/* 🎮 Sous-titre */}
           <Text
             style={{
               fontSize: 22,
@@ -189,7 +183,6 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
             The match is over!
           </Text>
 
-          {/* 🏆 Scores */}
           <View
             style={{
               flexDirection: "row",
@@ -233,7 +226,6 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
             </View>
           </View>
 
-          {/* 👋 Message final */}
           <Text
             style={{
               fontSize: 20,
