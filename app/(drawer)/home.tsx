@@ -1,5 +1,6 @@
 import { General_Style } from "@/constants/General_Style";
 import { teams as teamsData } from "@/constants/JSON/Teams";
+import { getUserId } from "@/services/authService";
 import {
   createMatch,
   findFirstPendingMatch,
@@ -117,8 +118,17 @@ const Home = () => {
   }, [currentPlayer, competition, matchDuration, createdMatchId]);
 
   // 🔁 Fonction pour joindre un match côté joueur 2
+
   const tryJoinMatch = async (match: any) => {
     try {
+      const userData = await getUserId();
+      if (!userData) {
+        console.error("User ID non récupéré");
+        resetToHome("User ID not found.");
+        return;
+      }
+      console.log("userData", userData);
+
       setCurrentMatchId(match._id);
 
       const result = await joinMatch(match._id, {
@@ -132,7 +142,17 @@ const Home = () => {
         setBgOppositionTeam(result.playerOneTeam.color);
         setTextOppositionTeamColor(result.playerOneTeam.textColor);
         setStep(7);
-        socketRef.current?.emit("match_joined", { match });
+
+        // Envoie l'événement match_joined avec userId et teamInfo
+        socketRef.current?.emit("match_joined", {
+          match,
+          userId: userData,
+          teamInfo: {
+            title: teamSelected!,
+            color: bgSelectedTeam!,
+            textColor: textSelectedTeamColor!,
+          },
+        });
       } else {
         resetToHome("Unable to join the match.");
       }

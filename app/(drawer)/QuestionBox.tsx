@@ -1,5 +1,4 @@
 import { getUserId } from "@/services/authService";
-import { answerQuestion } from "@/services/matchService";
 import { getSocket } from "@/utils/socket";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LottieView from "lottie-react-native";
@@ -23,13 +22,16 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     null
   );
   const [userId, setUserId] = useState<string | null>(null);
+  const [conversionResult, setConversionResult] = useState<null | {
+    success: boolean;
+    message: string;
+  }>(null);
 
   const socket = getSocket();
   const lottieRef = useRef<LottieView>(null);
 
   // Utiliser un ref pour garder userId à jour dans les callbacks
   const userIdRef = useRef<string | null>(null);
-
   useEffect(() => {
     const fetchAndSetUserId = async () => {
       const id = await getUserId();
@@ -108,13 +110,18 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     };
 
     const handleConversionResult = (data: any) => {
+      console.log("🎯 Résultat de la conversion reçu :", data);
+
       if (data.playerId === userIdRef.current) {
-        Alert.alert(
-          "Conversion",
-          data.success
+        const message =
+          typeof data.message === "string"
+            ? data.message
+            : data.success
             ? "CONVERSION SUCCESSFUL 🎉"
-            : "CONVERSION UNSUCCESSFUL ❌"
-        );
+            : "CONVERSION UNSUCCESSFUL ❌";
+
+        // Alert.alert("Conversion", message);
+        setConversionResult(message);
       }
     };
 
@@ -162,15 +169,12 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     }
 
     try {
-      await answerQuestion(matchId, {
-        question: {
-          text: question.text,
-          options: question.options,
-          correctOption: question.correctOption,
-          isConversion: isConversion,
-        },
+      socket.emit("answer_question", {
+        matchId,
+        userId: userIdRef.current,
         selectedOption: selectedKey,
       });
+
       console.log("✅ Réponse envoyée avec succès");
     } catch (err: any) {
       console.log("❌ Erreur dans answerQuestion:", err);
@@ -193,7 +197,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     <View
       style={{ padding: 16, alignItems: "center", justifyContent: "center" }}
     >
-      {isConversion && (
+      {isConversion && !conversionResult && (
         <View
           style={{
             marginBottom: height * 0.01,
@@ -225,6 +229,30 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
           </Text>
         </View>
       )}
+
+      {conversionResult && (
+        <View
+          style={{
+            marginBottom: height * 0.01,
+            padding: 10,
+            borderRadius: 8,
+            width: "100%",
+            right: 10,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 20,
+              fontWeight: "bold",
+              color: "#FFD700",
+              textAlign: "center",
+            }}
+          >
+            {conversionResult.message}
+          </Text>
+        </View>
+      )}
+
       <View
         style={{
           backgroundColor: "rgba(228, 228, 228, 0.8)",
