@@ -101,6 +101,7 @@ export const createMatch = async ({
 }) => {
   try {
     const token = await AsyncStorage.getItem("token");
+    console.log("token", token);
 
     console.log("token token", token);
 
