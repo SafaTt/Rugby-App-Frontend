@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 const SignIn = () => {
   const navigation = useNavigation();
@@ -43,10 +44,18 @@ const SignIn = () => {
 
         router.push("../(drawer)/home");
       } else {
-        alert("Please fill in all fields");
+        Toast.show({
+          type: "error",
+          text1: "Validation Error",
+          text2: "Please fill in all fields",
+        });
       }
     } catch (err: any) {
-      alert(err.message);
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: err.response?.data?.message || err.message || "Server error",
+      });
     } finally {
       setLoading(false);
     }

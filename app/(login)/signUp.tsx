@@ -18,6 +18,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 const SignUp = () => {
   const navigation = useNavigation();
@@ -47,12 +48,20 @@ const SignUp = () => {
     setLoading(true);
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      Toast.show({
+        type: "error",
+        text1: "Validation Password",
+        text2: "Passwords do not match",
+      });
       setLoading(false);
       return;
     }
     if (!email || !password || !confirmPassword) {
-      alert("Please fill in all fields");
+      Toast.show({
+        type: "error",
+        text1: "Validation Error",
+        text2: "Passwords do not match",
+      });
       setLoading(false);
       return;
     }
@@ -61,7 +70,11 @@ const SignUp = () => {
       console.log("User registered:", data);
       router.push("../(drawer)/home");
     } catch (error: any) {
-      alert(error.message);
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: error.response?.data?.message || error.message || "Server error",
+      });
       setLoading(false);
     } finally {
       setLoading(false);

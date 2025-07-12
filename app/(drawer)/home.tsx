@@ -12,7 +12,7 @@ import { Image, ImageBackground } from "expo-image";
 import { router, useNavigation } from "expo-router";
 import LottieView from "lottie-react-native";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Dimensions, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import QuestionBox from "./QuestionBox";
 import Scoreboard from "./scoreboard";
@@ -251,16 +251,22 @@ const Home = () => {
   const handleCancelMatch = async () => {
     try {
       await cancelMatchApiCall(currentMatchId);
-      Alert.alert(
-        "Match cancelled",
-        "The match has been cancelled successfully."
-      );
+      Toast.show({
+        type: "success",
+        text1: "Match cancelled",
+        text2: "The match has been cancelled successfully.",
+      });
+
       // Revenir au step 0
       setStep(0);
       setCurrentPlayer(1);
       setCurrentMatchId(null);
     } catch (error) {
-      Alert.alert("Error", "Unable to cancel the match. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Match Error",
+        text2: "Unable to cancel the match. Please try again.",
+      });
     }
   };
   return (

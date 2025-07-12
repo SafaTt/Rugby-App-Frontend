@@ -3,7 +3,8 @@ import { getSocket } from "@/utils/socket";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LottieView from "lottie-react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { Alert, Dimensions, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Text, TouchableOpacity, View } from "react-native";
+import Toast from "react-native-toast-message";
 import timerAnimation from "../../assets/lottie/timer.json";
 
 const { height } = Dimensions.get("window");
@@ -120,7 +121,6 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
             ? "CONVERSION SUCCESSFUL 🎉"
             : "CONVERSION UNSUCCESSFUL ❌";
 
-        // Alert.alert("Conversion", message);
         setConversionResult({
           success: data.success,
           message,
@@ -168,7 +168,10 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
 
     const token = await AsyncStorage.getItem("token");
     if (!token) {
-      Alert.alert("Erreur", "Token non trouvé !");
+      Toast.show({
+        type: "error",
+        text1: "Token Error",
+      });
       return;
     }
 
@@ -182,7 +185,11 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       console.log("✅ Réponse envoyée avec succès");
     } catch (err: any) {
       console.log("❌ Erreur dans answerQuestion:", err);
-      Alert.alert("Erreur", err.message);
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: err.response?.data?.message || err.message || "Server error",
+      });
     }
   };
   useEffect(() => {
