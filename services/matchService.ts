@@ -229,13 +229,26 @@ export const getNextQuestion = async (id: string) => {
 
 export const markMatchAsFinished = async (matchId: any) => {
   try {
-    const response = await axios.patch(
-      `${PUBLIC_URI}/api/match/${matchId}/finish`
-    );
+    await axios.patch(`${PUBLIC_URI}/api/match/${matchId}/finish`);
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message ||
         "Erreur lors de la récupération des questions"
     );
+  }
+};
+export const cancelMatchApiCall = async (matchId: any) => {
+  try {
+    const response = await fetch(`${PUBLIC_URI}/api/match/cancel/${matchId}`, {
+      method: "PATCH",
+    });
+    if (!response.ok) {
+      throw new Error("Failed to cancel match");
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
   }
 };

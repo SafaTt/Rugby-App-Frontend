@@ -121,7 +121,11 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
             : "CONVERSION UNSUCCESSFUL ❌";
 
         // Alert.alert("Conversion", message);
-        setConversionResult(message);
+        setConversionResult({
+          success: data.success,
+          message,
+        });
+        setIsConversion(false);
       }
     };
 
@@ -181,10 +185,17 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       Alert.alert("Erreur", err.message);
     }
   };
+  useEffect(() => {
+    if (conversionResult) {
+      // Réinitialiser après 2 secondes, ou autre délai
+      const timeout = setTimeout(() => {
+        setConversionResult(null);
+        setIsConversion(false); // ✅ Clé du problème
+      }, 2000);
 
-  console.log("🧪 DEBUG : isConversion=", isConversion);
-  console.log("🧪 conversionPlayerId=", conversionPlayerId);
-  console.log("🧪 userIdRef.current=", userIdRef.current);
+      return () => clearTimeout(timeout);
+    }
+  }, [conversionResult]);
 
   if (isMatchFinished || !question) return null;
   const isNotAllowedToAnswer =
@@ -197,7 +208,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     <View
       style={{ padding: 16, alignItems: "center", justifyContent: "center" }}
     >
-      {isConversion && !conversionResult && (
+      {isConversion && (
         <View
           style={{
             marginBottom: height * 0.01,

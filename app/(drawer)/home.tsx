@@ -2,6 +2,7 @@ import { General_Style } from "@/constants/General_Style";
 import { teams as teamsData } from "@/constants/JSON/Teams";
 import { getUserId } from "@/services/authService";
 import {
+  cancelMatchApiCall,
   createMatch,
   findFirstPendingMatch,
   joinMatch,
@@ -11,7 +12,7 @@ import { Image, ImageBackground } from "expo-image";
 import { router, useNavigation } from "expo-router";
 import LottieView from "lottie-react-native";
 import { useEffect, useRef, useState } from "react";
-import { Dimensions, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import QuestionBox from "./QuestionBox";
 import Scoreboard from "./scoreboard";
@@ -247,6 +248,21 @@ const Home = () => {
     }, 100);
   };
 
+  const handleCancelMatch = async () => {
+    try {
+      await cancelMatchApiCall(currentMatchId);
+      Alert.alert(
+        "Match cancelled",
+        "The match has been cancelled successfully."
+      );
+      // Revenir au step 0
+      setStep(0);
+      setCurrentPlayer(1);
+      setCurrentMatchId(null);
+    } catch (error) {
+      Alert.alert("Error", "Unable to cancel the match. Please try again.");
+    }
+  };
   return (
     <ImageBackground
       style={General_Style.container}
@@ -663,6 +679,22 @@ const Home = () => {
               >
                 Waiting for the second player to join your match...
               </Text>
+              <TouchableOpacity
+                style={{
+                  marginTop: 30,
+                  backgroundColor: "#3b84e4ff",
+                  paddingVertical: 12,
+                  paddingHorizontal: 40,
+                  borderRadius: 10,
+                }}
+                onPress={handleCancelMatch}
+              >
+                <Text
+                  style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}
+                >
+                  Cancel Match
+                </Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <View>
