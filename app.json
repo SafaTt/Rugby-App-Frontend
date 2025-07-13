@@ -22,11 +22,6 @@
     },
     "android": {
       "edgeToEdgeEnabled": true,
-      "navigationBar": {
-        "visible": true,
-        "backgroundColor": "#284268",
-        "barStyle": "dark-content"
-      },
       "package": "com.safatouil.rugbyapp"
     },
     "web": {
@@ -42,7 +37,8 @@
           "backgroundColor": "#ffffff",
           "image": "./assets/images/generals/ball.png"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
