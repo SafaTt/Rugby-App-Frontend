@@ -86,7 +86,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   }, [socket, matchId]);
 
   const getInitialSeconds = (duration: string) => {
-    if (duration === "4 MINUTES") return 0.8 * 60;
+    if (duration === "4 MINUTES") return 4 * 60;
     if (duration === "6 MINUTES") return 6 * 60;
     if (duration === "10 MINUTES") return 10 * 60;
     return 0;
