@@ -27,6 +27,11 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     success: boolean;
     message: string;
   }>(null);
+  const [userAnswer, setUserAnswer] = useState<{
+    playerId: string;
+    selectedOption: string;
+    isCorrect: boolean;
+  } | null>(null);
 
   const socket = getSocket();
   const lottieRef = useRef<LottieView>(null);
@@ -129,18 +134,34 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       }
     };
 
+    const handleAnswerQuestion = (data: any) => {
+      if (data.playerId === userIdRef.current) {
+        setUserAnswer({
+          playerId: data.playerId,
+          selectedOption: data.selectedOption,
+          isCorrect: data.isCorrect,
+        });
+      }
+    };
+
     socket.on("match_finished", handleMatchFinished);
     socket.on("next_question", handleNextQuestion);
     socket.on("conversion_question", handleConversionQuestion);
     socket.on("conversion_result", handleConversionResult);
+    socket.on("answer_question", handleAnswerQuestion);
 
     return () => {
       socket.off("match_finished", handleMatchFinished);
       socket.off("next_question", handleNextQuestion);
       socket.off("conversion_question", handleConversionQuestion);
       socket.off("conversion_result", handleConversionResult);
+      socket.off("answer_question", handleAnswerQuestion);
     };
   }, [socket, isMatchFinished]);
+
+  useEffect(() => {
+    setUserAnswer(null);
+  }, [JSON.stringify(question)]);
 
   useEffect(() => {
     if (socket && matchId && !isMatchFinished) {
@@ -301,27 +322,43 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
           bottom: height * 0.15,
         }}
       >
-        {Object.entries(question.options).map(([key, value]) => (
-          <TouchableOpacity
-            key={key}
-            onPress={() => handleSelect(key)}
-            disabled={isNotAllowedToAnswer}
-            style={{
-              backgroundColor: "#fff",
-              borderWidth: 1,
-              borderColor: "#8e8b8b",
-              borderRadius: 6,
-              padding: 10,
-              marginBottom: 10,
-              width: "48%",
-              opacity: isNotAllowedToAnswer ? 0.6 : 1,
-            }}
-          >
-            <Text
-              style={{ fontSize: 16, textAlign: "center" }}
-            >{`${key}: ${value}`}</Text>
-          </TouchableOpacity>
-        ))}
+        {Object.entries(question.options).map(([key, value]) => {
+          const isSelected = userAnswer?.selectedOption === key;
+          const isCorrect = userAnswer?.isCorrect;
+
+          let backgroundColor = "#fff";
+          if (isSelected) {
+            backgroundColor = isCorrect
+              ? "rgba(186, 247, 186, 0.7)"
+              : "rgba(246, 151, 151, 0.6)";
+          }
+
+          return (
+            <TouchableOpacity
+              key={key}
+              onPress={() => handleSelect(key)}
+              disabled={isNotAllowedToAnswer}
+              style={{
+                backgroundColor,
+                borderWidth: 2,
+                borderColor: isSelected
+                  ? isCorrect
+                    ? "green"
+                    : "red"
+                  : "#8e8b8b",
+                borderRadius: 6,
+                padding: 10,
+                marginBottom: 10,
+                width: "48%",
+                opacity: isNotAllowedToAnswer ? 0.6 : 1,
+              }}
+            >
+              <Text style={{ fontSize: 16, textAlign: "center" }}>
+                {`${key}: ${value}`}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       <View style={{ alignItems: "center" }}>
