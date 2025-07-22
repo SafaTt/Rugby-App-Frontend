@@ -29,6 +29,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   const [matchFinished, setMatchFinished] = useState(false);
   const hasEmittedEnd = useRef(false);
   const [showMatchFinishedUI, setShowMatchFinishedUI] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   const socket = getSocket();
 
@@ -86,32 +87,53 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   }, [socket, matchId]);
 
   const getInitialSeconds = (duration: string) => {
-    if (duration === "4 MINUTES") return 4 * 60;
+    if (duration === "4 MINUTES") return 0.8 * 60;
     if (duration === "6 MINUTES") return 6 * 60;
     if (duration === "10 MINUTES") return 10 * 60;
     return 0;
   };
 
   useEffect(() => {
+    if (!socket) return;
+
+    const handleCorrectAnswer = (data: any) => {
+      setIsPaused(true);
+
+      // Reprendre le timer après 2 secondes
+      setTimeout(() => {
+        setIsPaused(false);
+      }, 2000);
+    };
+
+    socket.on("correct_answer_received", handleCorrectAnswer);
+
+    return () => {
+      socket.off("correct_answer_received", handleCorrectAnswer);
+    };
+  }, [socket]);
+
+  useEffect(() => {
     if (step === 7 && secondsLeft > 0) {
       const interval = setInterval(() => {
-        setSecondsLeft((prev) => {
-          const newTime = prev > 0 ? prev - 1 : 0;
-          if (newTime === 0 && !hasEmittedEnd.current) {
-            hasEmittedEnd.current = true;
-            setMatchFinished(true);
-            socket.emit("end_match", { matchId });
+        if (!isPaused) {
+          setSecondsLeft((prev) => {
+            const newTime = prev > 0 ? prev - 1 : 0;
+            if (newTime === 0 && !hasEmittedEnd.current) {
+              hasEmittedEnd.current = true;
+              setMatchFinished(true);
+              socket.emit("end_match", { matchId });
 
-            markMatchAsFinished(matchId).catch((err) => {
-              console.error("Erreur mise à jour match fini :", err);
-            });
-          }
-          return newTime;
-        });
+              markMatchAsFinished(matchId).catch((err) => {
+                console.error("Erreur mise à jour match fini :", err);
+              });
+            }
+            return newTime;
+          });
+        }
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [step, secondsLeft]);
+  }, [step, secondsLeft, isPaused]);
 
   useEffect(() => {
     if (matchFinished) {

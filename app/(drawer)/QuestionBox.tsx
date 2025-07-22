@@ -32,6 +32,9 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     selectedOption: string;
     isCorrect: boolean;
   } | null>(null);
+  const [correctAnswerMessage, setCorrectAnswerMessage] = useState<
+    string | null
+  >(null);
 
   const socket = getSocket();
   const lottieRef = useRef<LottieView>(null);
@@ -42,7 +45,6 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     const fetchAndSetUserId = async () => {
       const id = await getUserId();
       setUserId(id);
-      console.log("user iddd", id);
 
       userIdRef.current = id;
     };
@@ -66,8 +68,6 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     };
 
     const handleNextQuestion = (data: any) => {
-      console.log("📥 Nouvelle question reçue :", data.question);
-
       if (isMatchFinished) return;
       setIsConversion(false);
       setQuestion({
@@ -76,9 +76,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
         correctOption: data.question.correctAnswer,
       });
       setIsAnswered(false);
-      console.log(
-        "✅ Nouvelle question reçue, isAnswered réinitialisé à false"
-      );
+
       setTimeout(() => {
         lottieRef.current?.reset();
         lottieRef.current?.play();
@@ -86,16 +84,9 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     };
 
     const handleConversionQuestion = (data: any) => {
-      console.log(
-        "🎯 Conversion reçue pour :",
-        data.playerId,
-        " | Moi :",
-        userIdRef.current
-      );
-
       if (!data.playerId) {
         console.warn("⚠️ conversion_question reçu sans playerId !");
-        return; // ignore cet event mal formé
+        return;
       }
 
       setIsConversion(true);
@@ -106,9 +97,6 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
         correctOption: data.question.correctAnswer,
       });
       setIsAnswered(false);
-      console.log(
-        "✅ Question de conversion reçue, isAnswered réinitialisé à false"
-      );
       setTimeout(() => {
         lottieRef.current?.reset();
         lottieRef.current?.play();
@@ -116,8 +104,6 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     };
 
     const handleConversionResult = (data: any) => {
-      console.log("🎯 Résultat de la conversion reçu :", data);
-
       if (data.playerId === userIdRef.current) {
         const message =
           typeof data.message === "string"
@@ -144,11 +130,19 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       }
     };
 
+    const handlerAnswerMessage = (data: any) => {
+      if (data?.playerId === userIdRef.current) {
+        setCorrectAnswerMessage(data.message);
+        setTimeout(() => setCorrectAnswerMessage(null), 2000);
+      }
+    };
+
     socket.on("match_finished", handleMatchFinished);
     socket.on("next_question", handleNextQuestion);
     socket.on("conversion_question", handleConversionQuestion);
     socket.on("conversion_result", handleConversionResult);
     socket.on("answer_question", handleAnswerQuestion);
+    socket.on("correct_answer_received", handlerAnswerMessage);
 
     return () => {
       socket.off("match_finished", handleMatchFinished);
@@ -156,6 +150,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       socket.off("conversion_question", handleConversionQuestion);
       socket.off("conversion_result", handleConversionResult);
       socket.off("answer_question", handleAnswerQuestion);
+      socket.off("correct_answer_received", handlerAnswerMessage);
     };
   }, [socket, isMatchFinished]);
 
@@ -171,19 +166,14 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
 
   const handleSelect = async (selectedKey: string) => {
     if (isAnswered || !question) {
-      console.log("⛔ Blocked: Already answered or no question");
       return;
     }
 
-    // Verrouillage immédiat AVANT async
     setIsAnswered(true);
-
-    // Protéger contre mauvaises conversions
     if (
       isConversion &&
       `${conversionPlayerId}`.trim() !== `${userIdRef.current}`.trim()
     ) {
-      console.log("⛔ Blocked: not the converting player");
       return;
     }
 
@@ -202,10 +192,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
         userId: userIdRef.current,
         selectedOption: selectedKey,
       });
-
-      console.log("✅ Réponse envoyée avec succès");
     } catch (err: any) {
-      console.log("❌ Erreur dans answerQuestion:", err);
       Toast.show({
         type: "error",
         text1: "Login Failed",
@@ -230,7 +217,6 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     isAnswered ||
     (isConversion &&
       `${userIdRef.current}`.trim() !== `${conversionPlayerId}`.trim());
-  console.log("🧪 isNotAllowedToAnswer =", isNotAllowedToAnswer);
 
   return (
     <View
@@ -288,6 +274,29 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
             }}
           >
             {conversionResult.message}
+          </Text>
+        </View>
+      )}
+
+      {correctAnswerMessage && (
+        <View
+          style={{
+            marginBottom: height * 0.01,
+            padding: 10,
+            borderRadius: 8,
+            width: "100%",
+            right: 10,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 20,
+              fontWeight: "bold",
+              color: "green",
+              textAlign: "center",
+            }}
+          >
+            {correctAnswerMessage}
           </Text>
         </View>
       )}
