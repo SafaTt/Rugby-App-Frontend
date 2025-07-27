@@ -30,6 +30,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   const hasEmittedEnd = useRef(false);
   const [showMatchFinishedUI, setShowMatchFinishedUI] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [hasPassedHalfTime, setHasPassedHalfTime] = useState(false);
 
   const socket = getSocket();
 
@@ -87,7 +88,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   }, [socket, matchId]);
 
   const getInitialSeconds = (duration: string) => {
-    if (duration === "4 MINUTES") return 0.8 * 60;
+    if (duration === "4 MINUTES") return 4 * 60;
     if (duration === "6 MINUTES") return 6 * 60;
     if (duration === "10 MINUTES") return 10 * 60;
     return 0;
@@ -96,19 +97,22 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   useEffect(() => {
     if (!socket) return;
 
-    const handleCorrectAnswer = (data: any) => {
+    const handleHalfTime = (data: any) => {
       setIsPaused(true);
+      setHasPassedHalfTime(true);
 
-      // Reprendre le timer après 2 secondes
+      // Tu peux aussi envoyer une info au QuestionBox via un event global si nécessaire
+      // exemple : setShowHalfTimeUI(true)
+
       setTimeout(() => {
         setIsPaused(false);
-      }, 2000);
+      }, 4000);
     };
 
-    socket.on("correct_answer_received", handleCorrectAnswer);
+    socket.on("half_time", handleHalfTime);
 
     return () => {
-      socket.off("correct_answer_received", handleCorrectAnswer);
+      socket.off("half_time", handleHalfTime);
     };
   }, [socket]);
 
@@ -118,6 +122,8 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
         if (!isPaused) {
           setSecondsLeft((prev) => {
             const newTime = prev > 0 ? prev - 1 : 0;
+
+            // 🎯 Fin du match
             if (newTime === 0 && !hasEmittedEnd.current) {
               hasEmittedEnd.current = true;
               setMatchFinished(true);
@@ -127,13 +133,15 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
                 console.error("Erreur mise à jour match fini :", err);
               });
             }
+
             return newTime;
           });
         }
       }, 1000);
+
       return () => clearInterval(interval);
     }
-  }, [step, secondsLeft, isPaused]);
+  }, [step, secondsLeft, isPaused, match?.duration, hasPassedHalfTime]);
 
   useEffect(() => {
     if (matchFinished) {

@@ -1,9 +1,10 @@
+import { General_Style } from "@/constants/General_Style";
 import { getUserId } from "@/services/authService";
 import { getSocket } from "@/utils/socket";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LottieView from "lottie-react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { Dimensions, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import timerAnimation from "../../assets/lottie/timer.json";
 
@@ -35,6 +36,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
   const [correctAnswerMessage, setCorrectAnswerMessage] = useState<
     string | null
   >(null);
+  const [showHalfTime, setShowHalfTime] = useState(false);
 
   const socket = getSocket();
   const lottieRef = useRef<LottieView>(null);
@@ -137,12 +139,34 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       }
     };
 
+    const handleHalfTime = () => {
+      setShowHalfTime(true);
+
+      setTimeout(() => {
+        setShowHalfTime(false);
+      }, 4000);
+    };
+
+    const handleAbandon = (data: any) => {
+      if (data.matchId === matchId) {
+        Toast.show({
+          type: "info",
+          text1: "Match over",
+          text2: "A player left the match.",
+        });
+
+        if (onMatchEnd) onMatchEnd();
+      }
+    };
+
     socket.on("match_finished", handleMatchFinished);
     socket.on("next_question", handleNextQuestion);
     socket.on("conversion_question", handleConversionQuestion);
     socket.on("conversion_result", handleConversionResult);
     socket.on("answer_question", handleAnswerQuestion);
     socket.on("correct_answer_received", handlerAnswerMessage);
+    socket.on("half_time", handleHalfTime);
+    socket.on("match_finished_due_to_leave", handleAbandon);
 
     return () => {
       socket.off("match_finished", handleMatchFinished);
@@ -151,8 +175,10 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       socket.off("conversion_result", handleConversionResult);
       socket.off("answer_question", handleAnswerQuestion);
       socket.off("correct_answer_received", handlerAnswerMessage);
+      socket.off("half_time", handleHalfTime);
+      socket.off("match_finished_due_to_leave", handleAbandon);
     };
-  }, [socket, isMatchFinished]);
+  }, [socket, isMatchFinished, matchId]);
 
   useEffect(() => {
     setUserAnswer(null);
@@ -290,13 +316,36 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
         >
           <Text
             style={{
-              fontSize: 20,
+              fontSize: 22,
               fontWeight: "bold",
-              color: "green",
+              color: "#FFD700",
               textAlign: "center",
             }}
           >
             {correctAnswerMessage}
+          </Text>
+        </View>
+      )}
+
+      {showHalfTime && (
+        <View
+          style={{
+            marginBottom: height * 0.01,
+            padding: 10,
+            borderRadius: 8,
+            width: "100%",
+            right: 10,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 22,
+              fontWeight: "bold",
+              color: "#FFD700",
+              textAlign: "center",
+            }}
+          >
+            Half-time !
           </Text>
         </View>
       )}
@@ -371,18 +420,55 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       </View>
 
       <View style={{ alignItems: "center" }}>
-        <LottieView
-          ref={lottieRef}
-          source={timerAnimation}
-          autoPlay
-          loop={false}
-          duration={10000}
+        <View
           style={{
-            bottom: height * 0.03,
-            width: 50,
-            height: 50,
+            width: "100%",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            bottom: height * 0.04,
           }}
-        />
+        >
+          <TouchableOpacity
+            style={{
+              borderWidth: 1,
+              backgroundColor: "rgba(22, 21, 21, 0.57)",
+              borderColor: "#fff",
+              padding: 5,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onPress={() => {
+              Alert.alert(
+                "Confirmation",
+                "Do you really want to leave the match?",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Yes",
+                    onPress: async () => {
+                      const userId = await getUserId();
+                      socket.emit("player_leave_match", { matchId, userId });
+                    },
+                  },
+                ]
+              );
+            }}
+          >
+            <Text style={General_Style.clickText}>Leave the match</Text>
+          </TouchableOpacity>
+          <LottieView
+            ref={lottieRef}
+            source={timerAnimation}
+            autoPlay
+            loop={false}
+            duration={10000}
+            style={{
+              // bottom: height * 0.03,
+              width: 50,
+              height: 50,
+            }}
+          />
+        </View>
       </View>
     </View>
   );
