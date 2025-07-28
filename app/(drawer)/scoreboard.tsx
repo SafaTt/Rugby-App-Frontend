@@ -31,6 +31,8 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   const [showMatchFinishedUI, setShowMatchFinishedUI] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [hasPassedHalfTime, setHasPassedHalfTime] = useState(false);
+  const [hasGoldenPointLaunched, setHasGoldenPointLaunched] = useState(false);
+  const [showGoldenPointBanner, setShowGoldenPointBanner] = useState(false);
 
   const socket = getSocket();
 
@@ -81,14 +83,27 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
       }
     };
 
+    const handleGoldenPoint = () => {
+      console.log("🎯 Golden point signal reçu !");
+
+      setShowGoldenPointBanner(true);
+
+      setTimeout(() => {
+        setShowGoldenPointBanner(false);
+      }, 4000);
+    };
+
     socket.on("score_updated", handleScoreUpdate);
+    // socket.on("golden_point_started", handleGoldenPoint);
+
     return () => {
       socket.off("score_updated", handleScoreUpdate);
+      // socket.off("golden_point_started", handleGoldenPoint);
     };
   }, [socket, matchId]);
 
   const getInitialSeconds = (duration: string) => {
-    if (duration === "4 MINUTES") return 4 * 60;
+    if (duration === "4 MINUTES") return 0.5 * 60;
     if (duration === "6 MINUTES") return 6 * 60;
     if (duration === "10 MINUTES") return 10 * 60;
     return 0;
@@ -125,6 +140,12 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
 
             // 🎯 Fin du match
             if (newTime === 0 && !hasEmittedEnd.current) {
+              // if (scoreUserOne === scoreUserTwo && !hasGoldenPointLaunched) {
+              //   setHasGoldenPointLaunched(true);
+              //   socket.emit("launch_golden_point", { matchId });
+              //   return prev; // Ne termine pas le match tout de suite
+              // }
+
               hasEmittedEnd.current = true;
               setMatchFinished(true);
               socket.emit("end_match", { matchId });

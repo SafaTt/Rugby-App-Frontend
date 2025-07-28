@@ -37,6 +37,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     string | null
   >(null);
   const [showHalfTime, setShowHalfTime] = useState(false);
+  const [isGoldenPoint, setIsGoldenPoint] = useState(false);
 
   const socket = getSocket();
   const lottieRef = useRef<LottieView>(null);
@@ -64,6 +65,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       setIsMatchFinished(true);
       setQuestion(null);
       setIsAnswered(true);
+      // setIsGoldenPoint(false);
       setTimeout(() => {
         if (onMatchEnd) onMatchEnd();
       }, 5000);
@@ -159,6 +161,22 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       }
     };
 
+    const handleGoldenPoint = (data: any) => {
+      setIsGoldenPoint(true);
+      setQuestion({
+        text: data.question.text,
+        options: data.question.choices,
+        correctOption: data.question.correctAnswer,
+      });
+      setIsAnswered(false);
+      setIsConversion(false);
+
+      setTimeout(() => {
+        lottieRef.current?.reset();
+        lottieRef.current?.play();
+      }, 50);
+    };
+
     socket.on("match_finished", handleMatchFinished);
     socket.on("next_question", handleNextQuestion);
     socket.on("conversion_question", handleConversionQuestion);
@@ -167,6 +185,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     socket.on("correct_answer_received", handlerAnswerMessage);
     socket.on("half_time", handleHalfTime);
     socket.on("match_finished_due_to_leave", handleAbandon);
+    // socket.on("golden_point_question", handleGoldenPoint);
 
     return () => {
       socket.off("match_finished", handleMatchFinished);
@@ -177,6 +196,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       socket.off("correct_answer_received", handlerAnswerMessage);
       socket.off("half_time", handleHalfTime);
       socket.off("match_finished_due_to_leave", handleAbandon);
+      // socket.off("golden_point_question", handleGoldenPoint);
     };
   }, [socket, isMatchFinished, matchId]);
 
@@ -350,6 +370,39 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
         </View>
       )}
 
+      {/* {isGoldenPoint && (
+        <View
+          style={{
+            marginBottom: height * 0.01,
+            padding: 10,
+            borderRadius: 8,
+            width: "100%",
+            right: 10,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 20,
+              fontWeight: "bold",
+              color: "#FFD700",
+              textAlign: "center",
+            }}
+          >
+            🟡 GOLDEN POINT
+          </Text>
+          <Text
+            style={{
+              fontSize: 14,
+              color: "#e3b11a",
+              textAlign: "center",
+              marginTop: 4,
+            }}
+          >
+            First correct answer wins the match!
+          </Text>
+        </View>
+      )} */}
+
       <View
         style={{
           backgroundColor: "rgba(228, 228, 228, 0.8)",
@@ -384,7 +437,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
           const isSelected = userAnswer?.selectedOption === key;
           const isCorrect = userAnswer?.isCorrect;
 
-          let backgroundColor = "#fff";
+          let backgroundColor = isGoldenPoint ? "#ffeaa7" : "#fff";
           if (isSelected) {
             backgroundColor = isCorrect
               ? "rgba(186, 247, 186, 0.7)"
