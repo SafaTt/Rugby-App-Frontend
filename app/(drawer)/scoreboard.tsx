@@ -33,6 +33,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   const [hasPassedHalfTime, setHasPassedHalfTime] = useState(false);
   const [hasGoldenPointLaunched, setHasGoldenPointLaunched] = useState(false);
   const [showGoldenPointBanner, setShowGoldenPointBanner] = useState(false);
+  const [isGoldenPoint, setIsGoldenPoint] = useState(false);
 
   const socket = getSocket();
 
@@ -85,6 +86,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
 
     const handleGoldenPoint = () => {
       console.log("🎯 Golden point signal reçu !");
+      setIsGoldenPoint(true);
 
       setShowGoldenPointBanner(true);
 
@@ -93,17 +95,28 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
       }, 4000);
     };
 
+    const handleGoldenPointWinner = (data: any) => {
+      console.log("✅ Victoire golden point reçue !", data);
+
+      setScoreUserOne(data.scoreUserOne);
+      setScoreUserTwo(data.scoreUserTwo);
+
+      setMatchFinished(true);
+    };
+
     socket.on("score_updated", handleScoreUpdate);
-    // socket.on("golden_point_started", handleGoldenPoint);
+    socket.on("golden_point_started", handleGoldenPoint);
+    socket.on("golden_point_winner", handleGoldenPointWinner);
 
     return () => {
       socket.off("score_updated", handleScoreUpdate);
-      // socket.off("golden_point_started", handleGoldenPoint);
+      socket.off("golden_point_started", handleGoldenPoint);
+      socket.off("golden_point_winner", handleGoldenPointWinner);
     };
   }, [socket, matchId]);
 
   const getInitialSeconds = (duration: string) => {
-    if (duration === "4 MINUTES") return 0.5 * 60;
+    if (duration === "4 MINUTES") return 0.3 * 60;
     if (duration === "6 MINUTES") return 6 * 60;
     if (duration === "10 MINUTES") return 10 * 60;
     return 0;
@@ -140,19 +153,20 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
 
             // 🎯 Fin du match
             if (newTime === 0 && !hasEmittedEnd.current) {
-              // if (scoreUserOne === scoreUserTwo && !hasGoldenPointLaunched) {
-              //   setHasGoldenPointLaunched(true);
-              //   socket.emit("launch_golden_point", { matchId });
-              //   return prev; // Ne termine pas le match tout de suite
-              // }
+              if (scoreUserOne === scoreUserTwo && !hasGoldenPointLaunched) {
+                setHasGoldenPointLaunched(true);
+                socket.emit("golden_point_trigger", { matchId });
 
-              hasEmittedEnd.current = true;
-              setMatchFinished(true);
-              socket.emit("end_match", { matchId });
+                // ✅ continue la décrémentation pour atteindre 0
+              } else {
+                hasEmittedEnd.current = true;
+                setMatchFinished(true);
+                socket.emit("end_match", { matchId });
 
-              markMatchAsFinished(matchId).catch((err) => {
-                console.error("Erreur mise à jour match fini :", err);
-              });
+                markMatchAsFinished(matchId).catch((err) => {
+                  console.error("Erreur mise à jour match fini :", err);
+                });
+              }
             }
 
             return newTime;
@@ -175,6 +189,13 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
     const seconds = secs % 60;
     return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
+
+  useEffect(() => {
+    if (matchFinished) {
+      setShowMatchFinishedUI(true);
+      setIsGoldenPoint(false); // pour restaurer le scoreboard si nécessaire dans un autre écran
+    }
+  }, [matchFinished]);
 
   // ✅ Déplace la condition ici à la fin pour ne pas bloquer les effets
   if (step !== 7 || !match) return null;
@@ -294,6 +315,33 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
     );
   }
 
+  {
+    showGoldenPointBanner && (
+      <View
+        style={{
+          position: "absolute",
+          top: 20,
+          backgroundColor: "#FFD700",
+          padding: 10,
+          borderRadius: 8,
+          zIndex: 1000,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 18,
+            fontWeight: "bold",
+            color: "#000",
+            textAlign: "center",
+          }}
+        >
+          🟡 GOLDEN POINT! Égalité parfaite – prochaine bonne réponse = victoire
+          ⚡
+        </Text>
+      </View>
+    );
+  }
+  if (isGoldenPoint && !showMatchFinishedUI) return null;
   return (
     <View style={{ flex: 1, alignItems: "center" }}>
       <View style={General_Style.viewBoard}>

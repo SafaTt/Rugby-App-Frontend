@@ -18,6 +18,7 @@ interface Props {
 const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
   const [question, setQuestion] = useState<any>(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [isGoldenPoint, setIsGoldenPoint] = useState(false);
   const [isMatchFinished, setIsMatchFinished] = useState(false);
   const [isConversion, setIsConversion] = useState(false);
   const [conversionPlayerId, setConversionPlayerId] = useState<string | null>(
@@ -158,6 +159,61 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
         if (onMatchEnd) onMatchEnd();
       }
     };
+
+    // GOLDEN POINT déclenché
+    const handleGoldenPointStarted = () => {
+      Toast.show({
+        type: "info",
+        text1: "GOLDEN POINT!",
+        text2: "Tie! Next correct answer decides the match ⚡",
+      });
+    };
+
+    // Question GOLDEN POINT
+    const handleGoldenPointQuestion = (data: any) => {
+      setIsConversion(false);
+      setIsGoldenPoint(true);
+      setQuestion({
+        text: data.question.text,
+        options: data.question.choices,
+        correctOption: data.question.correctAnswer,
+      });
+      setIsAnswered(false);
+
+      setTimeout(() => {
+        lottieRef.current?.reset();
+        lottieRef.current?.play();
+      }, 50);
+    };
+
+    // Réponse correcte = fin immédiate
+    const handleGoldenPointWinner = (data: any) => {
+      Toast.show({
+        type: "success",
+        text1: "GOLDEN POINT VICTORY 🏆",
+        text2: `Match over!`,
+      });
+
+      setIsMatchFinished(true);
+      setQuestion(null);
+      setIsAnswered(true);
+
+      setTimeout(() => {
+        if (onMatchEnd) onMatchEnd();
+      }, 4000);
+    };
+
+    // Réponse incorrecte = simple message
+    const handleWrongGoldenAnswer = (data: any) => {
+      if (data.playerId === userIdRef.current) {
+        Toast.show({
+          type: "error",
+          text1: "Incorrect ❌",
+          text2: "Wrong answer during GOLDEN POINT.",
+        });
+      }
+    };
+
     socket.on("match_finished", handleMatchFinished);
     socket.on("next_question", handleNextQuestion);
     socket.on("conversion_question", handleConversionQuestion);
@@ -166,6 +222,10 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     socket.on("correct_answer_received", handlerAnswerMessage);
     socket.on("half_time", handleHalfTime);
     socket.on("match_finished_due_to_leave", handleAbandon);
+    socket.on("golden_point_started", handleGoldenPointStarted);
+    socket.on("golden_point_question", handleGoldenPointQuestion);
+    socket.on("golden_point_winner", handleGoldenPointWinner);
+    socket.on("wrong_golden_point_answer", handleWrongGoldenAnswer);
 
     return () => {
       socket.off("match_finished", handleMatchFinished);
@@ -176,6 +236,10 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       socket.off("correct_answer_received", handlerAnswerMessage);
       socket.off("half_time", handleHalfTime);
       socket.off("match_finished_due_to_leave", handleAbandon);
+      socket.off("golden_point_started", handleGoldenPointStarted);
+      socket.off("golden_point_question", handleGoldenPointQuestion);
+      socket.off("golden_point_winner", handleGoldenPointWinner);
+      socket.off("wrong_golden_point_answer", handleWrongGoldenAnswer);
     };
   }, [socket, isMatchFinished, matchId]);
 
@@ -345,6 +409,28 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
             }}
           >
             Half-time !
+          </Text>
+        </View>
+      )}
+
+      {isGoldenPoint && (
+        <View
+          style={{
+            padding: 10,
+            backgroundColor: "#FFD700",
+            borderRadius: 8,
+            marginBottom: height * 0.01,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 20,
+              fontWeight: "bold",
+              color: "#000",
+              textAlign: "center",
+            }}
+          >
+            GOLDEN POINT - Next correct answer = VICTORY!
           </Text>
         </View>
       )}
