@@ -90,6 +90,8 @@ export const createMatch = async ({
   competition,
   duration,
   playerOneTeam,
+  playerTwoTeam, // optionnel
+  isAgainstAI = false,
 }: {
   competition: string;
   duration: string;
@@ -98,26 +100,40 @@ export const createMatch = async ({
     color: string;
     textColor: string;
   };
+  playerTwoTeam?: {
+    title: string;
+    color: string;
+    textColor: string;
+    isAI?: boolean; // optionnel, frontend seulement
+  };
+  isAgainstAI?: boolean;
 }) => {
   try {
     const token = await AsyncStorage.getItem("token");
-    console.log("token", token);
 
-    console.log("token token", token);
+    // Construire le payload selon la logique backend :
+    // On envoie playerTwoTeam si isAgainstAI === true
+    // OU si playerTwoTeam est défini (match humain avec joueur 2)
+    const payload: any = {
+      competition,
+      duration,
+      playerOneTeam,
+    };
 
-    const res = await axios.post(
-      `${PUBLIC_URI}/api/match/create`,
-      {
-        competition,
-        duration,
-        playerOneTeam,
+    if (isAgainstAI) {
+      payload.isAgainstAI = true;
+      payload.playerTwoTeam = playerTwoTeam;
+    } else if (playerTwoTeam) {
+      // match humain avec playerTwoTeam déjà défini (match qui démarre)
+      payload.playerTwoTeam = playerTwoTeam;
+    }
+    // Sinon on n’envoie pas playerTwoTeam ni isAgainstAI, backend met status waiting
+
+    const res = await axios.post(`${PUBLIC_URI}/api/match/create`, payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    });
 
     return res.data;
   } catch (error: any) {

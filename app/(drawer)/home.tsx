@@ -181,7 +181,7 @@ const Home = () => {
     }
 
     try {
-      const result = await createMatch({
+      const matchData: any = {
         competition,
         duration: matchDuration,
         playerOneTeam: {
@@ -189,12 +189,27 @@ const Home = () => {
           color: bgSelectedTeam,
           textColor: textSelectedTeamColor,
         },
-      });
+      };
+
+      // Cas IA : currentPlayer === 1
+      if (currentPlayer === 1) {
+        matchData.isAgainstAI = true;
+        matchData.playerTwoTeam = {
+          title: "AI Bot",
+          color: "#888888",
+          textColor: "#000000",
+          isAI: true,
+        };
+      }
+
+      const result = await createMatch(matchData);
 
       if (result && result._id) {
         setCreatedMatchId(result._id);
         setCurrentMatchId(result._id);
-        setWaitingForPlayer(true);
+
+        // IA = match immédiat, sinon attendre joueur 2
+        setWaitingForPlayer(currentPlayer === 2);
         setStep(7);
 
         socketRef.current?.emit("join_match_room", result._id);
@@ -567,51 +582,83 @@ const Home = () => {
 
       {step === 5 && (
         <>
-          <Text
-            style={[
-              General_Style.titleHome,
-              { fontSize: 30, letterSpacing: 2 },
-            ]}
-          >
-            MULTIPLAYER MODE{"\n"}SELECT AN OPTION
-          </Text>
-
-          <TouchableOpacity
-            style={General_Style.playerNbBtn}
-            onPress={() => {
-              setCurrentPlayer(1);
-              setStep(7); // on va vers la création → puis match créé côté step 7
-              handleCreateMatch(); // commence la création
-            }}
-          >
-            <Text style={General_Style.playerNbTxt}>
-              CREATE MATCH{"\n"}
-              <Text style={{ fontWeight: "500", fontSize: 15 }}>
-                (be the first player)
+          {currentPlayer === 1 ? (
+            // 🧠 Mode solo (vs IA)
+            <>
+              <Text
+                style={[
+                  General_Style.titleHome,
+                  { fontSize: 30, letterSpacing: 2 },
+                ]}
+              >
+                GET READY TO PLAY{"\n"}AGAINST THE APP
               </Text>
-            </Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[General_Style.playerNbBtn, { top: height * 0.23 }]}
-            onPress={() => {
-              setCurrentPlayer(2);
-              setStep(6);
-              fetchLatestWaitingMatch();
-            }}
-          >
-            <Text style={General_Style.playerNbTxt}>
-              JOIN MATCH{"\n"}
-              <Text style={{ fontWeight: "500", fontSize: 15 }}>
-                (find a pending match)
+              <TouchableOpacity
+                style={General_Style.playerNbBtn}
+                onPress={() => {
+                  setStep(7); // Aller directement à l'étape de jeu
+                  handleCreateMatch(); // Créer le match contre IA
+                }}
+              >
+                <Text style={General_Style.playerNbTxt}>
+                  START MATCH{"\n"}
+                  <Text style={{ fontWeight: "500", fontSize: 15 }}>
+                    (play vs AI)
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            // 👥 Mode multijoueur (PVP)
+            <>
+              <Text
+                style={[
+                  General_Style.titleHome,
+                  { fontSize: 30, letterSpacing: 2 },
+                ]}
+              >
+                MULTIPLAYER MODE{"\n"}SELECT AN OPTION
               </Text>
-            </Text>
-          </TouchableOpacity>
 
-          <Image
-            source={require("../../assets/images/generals/ball.png")}
-            style={[General_Style.imgBall, { bottom: height * 0.08 }]}
-          />
+              <TouchableOpacity
+                style={General_Style.playerNbBtn}
+                onPress={() => {
+                  setCurrentPlayer(1);
+                  setStep(7);
+                  handleCreateMatch(); // Créer le match en attente de joueur 2
+                }}
+              >
+                <Text style={General_Style.playerNbTxt}>
+                  CREATE MATCH{"\n"}
+                  <Text style={{ fontWeight: "500", fontSize: 15 }}>
+                    (be the first player)
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[General_Style.playerNbBtn, { top: height * 0.23 }]}
+                onPress={() => {
+                  setCurrentPlayer(2);
+                  setStep(6);
+                  fetchLatestWaitingMatch(); // Chercher un match à rejoindre
+                }}
+              >
+                <Text style={General_Style.playerNbTxt}>
+                  JOIN MATCH{"\n"}
+                  <Text style={{ fontWeight: "500", fontSize: 15 }}>
+                    (find a pending match)
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+
+              <Image
+                source={require("../../assets/images/generals/ball.png")}
+                style={[General_Style.imgBall, { bottom: height * 0.08 }]}
+              />
+            </>
+          )}
         </>
       )}
 
