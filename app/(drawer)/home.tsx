@@ -80,7 +80,7 @@ const Home = () => {
         const match = data.match;
 
         if (currentPlayer === 1 && match._id === createdMatchId) {
-          console.log("🎉 Joueur 2 a rejoint !");
+          console.log("🎉 Joueur AI a rejoint !");
           setWaitingForPlayer(false);
           setCurrentMatchId(match._id);
         }
@@ -213,6 +213,11 @@ const Home = () => {
         setStep(7);
 
         socketRef.current?.emit("join_match_room", result._id);
+
+        if (matchData.isAgainstAI) {
+          setShowQuestion(true);
+          setCurrentQuestionIndex(0);
+        }
       } else {
         resetToHome("Unable to create match.");
       }
