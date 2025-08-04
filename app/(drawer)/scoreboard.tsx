@@ -197,6 +197,22 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
     }
   }, [matchFinished]);
 
+  useEffect(() => {
+    // 🔁 Réinitialisation complète lorsque le match change
+    setMatch(null);
+    setSecondsLeft(0);
+    setScoreUserOne(0);
+    setScoreUserTwo(0);
+    setMatchFinished(false);
+    hasEmittedEnd.current = false;
+    setShowMatchFinishedUI(false);
+    setIsPaused(false);
+    setHasPassedHalfTime(false);
+    setHasGoldenPointLaunched(false);
+    setShowGoldenPointBanner(false);
+    setIsGoldenPoint(false);
+  }, [matchId]);
+
   // ✅ Déplace la condition ici à la fin pour ne pas bloquer les effets
   if (step !== 7 || !match) return null;
 
