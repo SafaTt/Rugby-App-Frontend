@@ -145,7 +145,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
 
       setTimeout(() => {
         setShowHalfTime(false);
-      }, 4000);
+      }, 2000);
     };
 
     const handleAbandon = (data: any) => {

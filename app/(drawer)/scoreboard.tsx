@@ -116,7 +116,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   }, [socket, matchId]);
 
   const getInitialSeconds = (duration: string) => {
-    if (duration === "4 MINUTES") return 0.3 * 60;
+    if (duration === "4 MINUTES") return 0.5 * 60;
     if (duration === "6 MINUTES") return 6 * 60;
     if (duration === "10 MINUTES") return 10 * 60;
     return 0;
@@ -125,16 +125,17 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   useEffect(() => {
     if (!socket) return;
 
-    const handleHalfTime = (data: any) => {
-      setIsPaused(true);
+    const handleHalfTime = () => {
+      // Ce client ne fait rien s’il a déjà lancé le half-time
+      if (hasPassedHalfTime) return;
+
       setHasPassedHalfTime(true);
+      setIsPaused(true);
 
-      // Tu peux aussi envoyer une info au QuestionBox via un event global si nécessaire
-      // exemple : setShowHalfTimeUI(true)
-
+      // Affiche visuellement la pause si tu veux
       setTimeout(() => {
         setIsPaused(false);
-      }, 4000);
+      }, 2000);
     };
 
     socket.on("half_time", handleHalfTime);
@@ -142,7 +143,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
     return () => {
       socket.off("half_time", handleHalfTime);
     };
-  }, [socket]);
+  }, [socket, hasPassedHalfTime]);
 
   useEffect(() => {
     if (step === 7 && secondsLeft > 0) {
@@ -151,13 +152,27 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
           setSecondsLeft((prev) => {
             const newTime = prev > 0 ? prev - 1 : 0;
 
+            const halfTimeMark = getInitialSeconds(match.duration) / 2;
+
+            // ✅ Lancement du half-time local
+            if (newTime === halfTimeMark && !hasPassedHalfTime) {
+              setHasPassedHalfTime(true); // utilisé uniquement comme drapeau
+              setIsPaused(true);
+
+              // ✅ Notifie le serveur (tu es le seul à envoyer)
+              socket.emit("half_time_triggered", { matchId });
+
+              // ✅ Fin du half-time après 4 sec
+              setTimeout(() => {
+                setIsPaused(false);
+              }, 2000);
+            }
+
             // 🎯 Fin du match
             if (newTime === 0 && !hasEmittedEnd.current) {
               if (scoreUserOne === scoreUserTwo && !hasGoldenPointLaunched) {
                 setHasGoldenPointLaunched(true);
                 socket.emit("golden_point_trigger", { matchId });
-
-                // ✅ continue la décrémentation pour atteindre 0
               } else {
                 hasEmittedEnd.current = true;
                 setMatchFinished(true);
