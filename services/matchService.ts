@@ -269,3 +269,21 @@ export const cancelMatchApiCall = async (matchId: any) => {
     throw error;
   }
 };
+
+export const getUserDashboardStats = async () => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) throw new Error("User not found");
+
+    const response = await axios.get(`${PUBLIC_URI}/api/dashboard/user-stats`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Erreur getUserDashboardStats:", error);
+    throw error;
+  }
+};

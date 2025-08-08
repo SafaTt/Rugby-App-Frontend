@@ -145,16 +145,19 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
 
       setTimeout(() => {
         setShowHalfTime(false);
-      }, 2000);
+      }, 3000);
     };
 
     const handleAbandon = (data: any) => {
+      console.log("handleAbandon received:", data);
+
       if (data.matchId === matchId) {
         Toast.show({
           type: "info",
           text1: "Match over",
           text2: "A player left the match.",
         });
+        console.log("Match finished due to leave", matchId);
 
         if (onMatchEnd) onMatchEnd();
       }
@@ -171,6 +174,8 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
 
     // Question GOLDEN POINT
     const handleGoldenPointQuestion = (data: any) => {
+      console.log("🟢 Question GOLDEN POINT reçue :", data);
+
       setIsConversion(false);
       setIsGoldenPoint(true);
       setQuestion({

@@ -116,7 +116,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   }, [socket, matchId]);
 
   const getInitialSeconds = (duration: string) => {
-    if (duration === "4 MINUTES") return 0.5 * 60;
+    if (duration === "4 MINUTES") return 0.3 * 60;
     if (duration === "6 MINUTES") return 6 * 60;
     if (duration === "10 MINUTES") return 10 * 60;
     return 0;
@@ -135,7 +135,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
       // Affiche visuellement la pause si tu veux
       setTimeout(() => {
         setIsPaused(false);
-      }, 2000);
+      }, 3000);
     };
 
     socket.on("half_time", handleHalfTime);
