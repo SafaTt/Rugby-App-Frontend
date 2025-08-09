@@ -103,7 +103,7 @@ const Profile = () => {
         <Text style={{ fontSize: 24, fontWeight: "bold", color: "white" }}>
           {stats.pseudo}
         </Text>
-        <Text style={{ fontSize: 16, color: "#ccc" }}>Rang : {stats.rank}</Text>
+        <Text style={{ fontSize: 16, color: "#ccc" }}>Rank: {stats.rank}</Text>
       </View>
 
       {/* PIE CHART */}
@@ -111,6 +111,8 @@ const Profile = () => {
         style={{
           alignItems: "center",
           marginTop: height * 0.05,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 5 },
         }}
       >
         <PieChart widthAndHeight={height * 0.25} series={series} />
@@ -154,27 +156,35 @@ const Profile = () => {
       <FlatList
         data={stats.matchHistory}
         keyExtractor={(item) => item.matchId}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+        style={{ marginTop: height * 0.05 }}
         renderItem={({ item }) => (
           <View
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
-              padding: 10,
-              borderBottomWidth: 1,
-              borderColor: "#455A64", // gris foncé bleuté (plus doux que #333)
+              padding: 12,
+              marginVertical: 6,
+              backgroundColor: "rgba(176, 190, 197, 0.6)", // gris clair transparent
+              borderRadius: 12,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              elevation: 5, // Android shadow
             }}
           >
-            <Text style={{ color: "white" }}>
+            <Text style={{ color: "black", fontWeight: "600", fontSize: 16 }}>
               {item.teamName} vs {item.opponentTeamName}
             </Text>
             <Text
               style={{
                 color:
                   item.result === "win"
-                    ? "#4A90E2" // bleu clair comme le pie chart (Wins)
+                    ? "#69aefeff"
                     : item.result === "loss"
-                    ? "#B0BEC5" // gris clair comme le pie chart (Losses)
-                    : "#90A4AE", // gris moyen pour draw (neutre)
+                    ? "#dde9eeff"
+                    : "#90A4AE",
                 fontWeight: "bold",
               }}
             >
