@@ -287,3 +287,23 @@ export const getUserDashboardStats = async () => {
     throw error;
   }
 };
+export const getUserStatByTeam = async () => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) throw new Error("User not found");
+
+    const response = await axios.get(
+      `${PUBLIC_URI}/api/dashboard/stat-by-team`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Erreur getUserDashboardStats:", error);
+    throw error;
+  }
+};

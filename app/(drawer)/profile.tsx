@@ -11,8 +11,6 @@ import {
   View,
 } from "react-native";
 
-import PieChart from "react-native-pie-chart";
-
 const { height, width } = Dimensions.get("window");
 
 interface Team {
@@ -113,51 +111,104 @@ const Profile = () => {
           marginTop: height * 0.05,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5,
         }}
       >
-        <PieChart widthAndHeight={height * 0.25} series={series} />
+        {/* Pie Chart */}
+        {/* <PieChart widthAndHeight={height * 0.25} series={series} /> */}
 
+        {/* Stats Summary */}
         <View
           style={{
-            flexDirection: "row",
-            marginTop: 10,
-            justifyContent: "space-around",
-            width: 200,
+            marginTop: 15,
+            backgroundColor: "rgba(176, 190, 197, 0.6)",
+            borderRadius: 12,
+            paddingVertical: 10,
+            paddingHorizontal: 20,
+            width: "90%",
           }}
         >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <View
-              style={{
-                width: 16,
-                height: 16,
-                backgroundColor: "#4A90E2",
-                marginRight: 6,
-                borderRadius: 4,
-              }}
-            />
-            <Text style={{ color: "white" }}>{stats.totalWins} Wins</Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <View
-              style={{
-                width: 16,
-                height: 16,
-                backgroundColor: "#B0BEC5",
-                marginRight: 6,
-                borderRadius: 4,
-              }}
-            />
-            <Text style={{ color: "white" }}>{stats.totalLosses} Losses</Text>
-          </View>
+          {[
+            {
+              label: "Played",
+              value: `${stats.totalMatches} games`,
+              color: "black",
+            },
+            {
+              label: "Won",
+              value: `${stats.totalWins} games`,
+              color: "#2489feff",
+            },
+            {
+              label: "Lost",
+              value: `${stats.totalLosses} games`,
+              color: "#dde9eeff",
+            },
+            {
+              label: "Winning percentage",
+              value:
+                stats.totalMatches > 0
+                  ? `${Math.round(
+                      (stats.totalWins / stats.totalMatches) * 100
+                    )}%`
+                  : "0%",
+              color: "black",
+            },
+          ].map((item, index, arr) => (
+            <View key={index}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  paddingVertical: 6,
+                }}
+              >
+                <Text
+                  style={{ color: "#000", fontSize: 16, fontWeight: "500" }}
+                >
+                  {item.label}
+                </Text>
+                <Text
+                  style={{ color: item.color, fontSize: 15, fontWeight: "500" }}
+                >
+                  {item.value}
+                </Text>
+              </View>
+
+              {/* Ligne séparatrice sauf pour le dernier élément */}
+              {index < arr.length - 1 && (
+                <View
+                  style={{
+                    height: 1,
+                    backgroundColor: "rgba(0, 0, 0, 0.2)",
+                    marginVertical: 2,
+                  }}
+                />
+              )}
+            </View>
+          ))}
         </View>
       </View>
 
+      <Text
+        style={{
+          marginTop: height * 0.02,
+          color: "#dde9eeff",
+          fontSize: 20,
+          marginLeft: width * 0.08,
+          fontWeight: "500",
+        }}
+      >
+        🕒 Previous Matches
+      </Text>
       {/* MATCH HISTORY */}
       <FlatList
         data={stats.matchHistory}
         keyExtractor={(item) => item.matchId}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
-        style={{ marginTop: height * 0.05 }}
+        style={{ marginTop: height * 0.01 }}
         renderItem={({ item }) => (
           <View
             style={{
