@@ -1,5 +1,8 @@
 import { General_Style } from "@/constants/General_Style";
-import { getUserDashboardStats } from "@/services/matchService";
+import {
+  getUserDashboardStats,
+  getUserStatByTeam,
+} from "@/services/matchService";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import {
@@ -45,19 +48,34 @@ export interface UserDashboardStats {
   matchHistory: MatchHistory[];
 }
 
+interface TeamStats {
+  title: string;
+  color: string;
+  textColor: string;
+  played: number;
+  won: number;
+  lost: number;
+  goldenPoint: number;
+  winningPercentage: number;
+}
+
 const Profile = () => {
   const navigation = useNavigation();
   const [stats, setStats] = useState<UserDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const widthAndHeight = 200;
+  const [teamStats, setTeamStats] = useState<TeamStats[]>([]);
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
 
     const fetchStats = async () => {
       try {
-        const data = await getUserDashboardStats();
-        setStats(data);
+        const [dashboardData, teamData] = await Promise.all([
+          getUserDashboardStats(),
+          getUserStatByTeam(),
+        ]);
+        setStats(dashboardData);
+        setTeamStats(teamData.teamStats || []);
       } catch (err) {
         console.error("Erreur récupération stats:", err);
       } finally {
@@ -191,23 +209,22 @@ const Profile = () => {
           ))}
         </View>
       </View>
-
       <Text
         style={{
-          marginTop: height * 0.02,
+          marginTop: height * 0.04,
           color: "#dde9eeff",
           fontSize: 20,
           marginLeft: width * 0.08,
           fontWeight: "500",
         }}
       >
-        🕒 Previous Matches
+        📊 Stats by Team
       </Text>
-      {/* MATCH HISTORY */}
+
       <FlatList
-        data={stats.matchHistory}
-        keyExtractor={(item) => item.matchId}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+        data={teamStats}
+        keyExtractor={(item, index) => index.toString()}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 10 }}
         style={{ marginTop: height * 0.01 }}
         renderItem={({ item }) => (
           <View
@@ -216,34 +233,22 @@ const Profile = () => {
               justifyContent: "space-between",
               padding: 12,
               marginVertical: 6,
-              backgroundColor: "rgba(176, 190, 197, 0.6)", // gris clair transparent
+              backgroundColor: `${item.color}90`, // Couleur de l’équipe avec transparence
               borderRadius: 12,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.25,
               shadowRadius: 3.84,
-              elevation: 5, // Android shadow
+              elevation: 5,
             }}
           >
-            <Text style={{ color: "black", fontWeight: "600", fontSize: 16 }}>
-              {item.teamName} vs {item.opponentTeamName}
-            </Text>
             <Text
-              style={{
-                color:
-                  item.result === "win"
-                    ? "#69aefeff"
-                    : item.result === "loss"
-                    ? "#dde9eeff"
-                    : "#90A4AE",
-                fontWeight: "bold",
-              }}
+              style={{ color: item.textColor, fontWeight: "600", fontSize: 16 }}
             >
-              {item.result === "win"
-                ? "WIN"
-                : item.result === "loss"
-                ? "LOSS"
-                : "DRAW"}
+              {item.title} ({item.played} games)
+            </Text>
+            <Text style={{ color: item.textColor, fontWeight: "bold" }}>
+              {item.winningPercentage}%
             </Text>
           </View>
         )}

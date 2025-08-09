@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { General_Style } from "@/constants/General_Style";
-import { AntDesign, SimpleLineIcons } from "@expo/vector-icons";
+import { AntDesign, MaterialIcons, SimpleLineIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DrawerContentScrollView } from "@react-navigation/drawer";
 import { router } from "expo-router";
@@ -51,6 +51,18 @@ export default function Layout() {
                 style={styles.icon}
               />
               <Text style={General_Style.menuItemText}>Profile</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => props.navigation.navigate("MatchesHistory")}
+              style={[
+                General_Style.menuItemBtn,
+                currentIndex === routes.indexOf("MatchesHistory") &&
+                  styles.activeItem,
+              ]}
+            >
+              <MaterialIcons name="history" size={22} color="white" />
+              <Text style={General_Style.menuItemText}>Matches History</Text>
             </TouchableOpacity>
 
             {/* Logout */}
