@@ -48,7 +48,7 @@ const MatchesHistory = () => {
   const navigation = useNavigation();
   const [stats, setStats] = useState<UserDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const widthAndHeight = 200;
+  const [noMatches, setNoMatches] = useState(false);
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -56,85 +56,141 @@ const MatchesHistory = () => {
     const fetchStats = async () => {
       try {
         const data = await getUserDashboardStats();
-        setStats(data);
-      } catch (err) {
+        if (data.totalMatches === 0) {
+          setNoMatches(true);
+        } else {
+          setNoMatches(false);
+          setStats(data);
+        }
+      } catch (err: any) {
         console.error("Erreur récupération stats:", err);
+        if (err.response?.status === 404) {
+          setNoMatches(true);
+          setStats(null);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchStats();
-  }, [navigation]);
-
-  if (loading) {
-    return <ActivityIndicator size="large" color="#4395ffff" />;
-  }
-
-  if (!stats || !Array.isArray(stats.teams)) {
-    return <Text>Chargement...</Text>;
-  }
-
-  // Données pour le PieChart
-  const series = [
-    { value: stats.totalWins ?? 0, color: "#4A90E2" },
-    { value: stats.totalLosses ?? 0, color: "#B0BEC5" },
-  ];
+  }, [navigation, stats]);
 
   return (
     <ImageBackground
       style={General_Style.container}
       source={require("../../assets/images/generals/1.png")}
     >
-      {/* HEADER */}
-      <View style={{ alignItems: "center", marginTop: height * 0.08 }}>
-        <Text style={{ fontSize: 24, fontWeight: "bold", color: "white" }}>
-          {stats.pseudo}
-        </Text>
-        <Text style={{ fontSize: 16, color: "#ccc" }}>Rank: {stats.rank}</Text>
-      </View>
-
-     
-      {/* MATCH HISTORY */}
-      <FlatList
-        data={stats.matchHistory}
-        keyExtractor={(item) => item.matchId}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
-        style={{ marginTop: height * 0.02 }}
-        renderItem={({ item }) => (
-          <View
+      {loading ? (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ActivityIndicator size="large" color="#4395ffff" />
+        </View>
+      ) : noMatches ? (
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: 20,
+            marginTop: height * 0.2,
+          }}
+        >
+          <Text
             style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              padding: 12,
-              marginVertical: 6,
-              backgroundColor: "rgba(176, 190, 197, 0.6)", // gris clair transparent
-              borderRadius: 12,
+              color: "#fff",
+              fontSize: 22,
+              textAlign: "center",
+              letterSpacing: 1.5,
             }}
           >
-            <Text style={{ color: "black", fontWeight: "600", fontSize: 16 }}>
-              {item.teamName} vs {item.opponentTeamName}
+            {stats?.pseudo}
+          </Text>
+          <Text
+            style={{
+              color: "#fff",
+              fontSize: 22,
+              textAlign: "center",
+              marginTop: height * 0.015,
+              lineHeight: 30,
+              letterSpacing: 1.5,
+            }}
+          >
+            No matches currently, please{"\n"}start one ! 🚀
+          </Text>
+        </View>
+      ) : !stats || !Array.isArray(stats.teams) ? (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingHorizontal: 20,
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 18, textAlign: "center" }}>
+            Chargement...
+          </Text>
+        </View>
+      ) : (
+        <>
+          {/* HEADER */}
+          <View style={{ alignItems: "center", marginTop: height * 0.08 }}>
+            <Text style={{ fontSize: 24, fontWeight: "bold", color: "white" }}>
+              {stats.pseudo}
             </Text>
-            <Text
-              style={{
-                color:
-                  item.result === "win"
-                    ? "#4094f5ff"
-                    : item.result === "loss"
-                    ? "#dde9eeff"
-                    : "#90A4AE",
-                fontWeight: "bold",
-              }}
-            >
-              {item.result === "win"
-                ? "WIN"
-                : item.result === "loss"
-                ? "LOSS"
-                : "DRAW"}
+            <Text style={{ fontSize: 16, color: "#ccc" }}>
+              Rank: {stats.rank}
             </Text>
           </View>
-        )}
-      />
+
+          {/* MATCH HISTORY */}
+          <FlatList
+            data={stats.matchHistory}
+            keyExtractor={(item) => item.matchId}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+            style={{ marginTop: height * 0.02 }}
+            renderItem={({ item }) => (
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  padding: 12,
+                  marginVertical: 6,
+                  backgroundColor: "rgba(176, 190, 197, 0.6)", // gris clair transparent
+                  borderRadius: 12,
+                }}
+              >
+                <Text
+                  style={{ color: "black", fontWeight: "600", fontSize: 16 }}
+                >
+                  {item.teamName} vs {item.opponentTeamName}
+                </Text>
+                <Text
+                  style={{
+                    color:
+                      item.result === "win"
+                        ? "#4094f5ff"
+                        : item.result === "loss"
+                        ? "#dde9eeff"
+                        : "#90A4AE",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {item.result === "win"
+                    ? "WIN"
+                    : item.result === "loss"
+                    ? "LOSS"
+                    : "DRAW"}
+                </Text>
+              </View>
+            )}
+          />
+        </>
+      )}
     </ImageBackground>
   );
 };

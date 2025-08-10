@@ -281,7 +281,11 @@ export const getUserDashboardStats = async () => {
       },
     });
 
-    return response.data;
+    if (response) {
+      return response.data;
+    } else {
+      return null;
+    }
   } catch (error) {
     console.error("Erreur getUserDashboardStats:", error);
     throw error;
@@ -301,9 +305,13 @@ export const getUserStatByTeam = async () => {
       }
     );
 
-    return response.data;
+    if (response) {
+      return response.data;
+    } else {
+      return null;
+    }
   } catch (error) {
-    console.error("Erreur getUserDashboardStats:", error);
+    console.error("Erreur get stat by team:", error);
     throw error;
   }
 };
