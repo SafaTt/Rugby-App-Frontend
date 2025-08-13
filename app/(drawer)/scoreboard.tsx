@@ -5,7 +5,7 @@ import {
   markMatchAsFinished,
 } from "@/services/matchService";
 import { getSocket } from "@/utils/socket";
-import LottieView from "lottie-react-native";
+import { Image } from "expo-image";
 import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, Text, View } from "react-native";
 
@@ -116,7 +116,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   }, [socket, matchId]);
 
   const getInitialSeconds = (duration: string) => {
-    if (duration === "4 MINUTES") return 1 * 60;
+    if (duration === "4 MINUTES") return 0.8 * 60;
     if (duration === "6 MINUTES") return 6 * 60;
     if (duration === "10 MINUTES") return 10 * 60;
     return 0;
@@ -232,115 +232,133 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   if (step !== 7 || !match) return null;
 
   if (showMatchFinishedUI) {
+    let winnerText = "";
+    if (scoreUserOne > scoreUserTwo) {
+      winnerText = `${match.playerOneTeam.title} WIN!`;
+    } else if (scoreUserTwo > scoreUserOne) {
+      winnerText = `${match.playerTwoTeam.title} WIN!`;
+    } else {
+      winnerText = "DRAW!";
+    }
+
     return (
       <View
         style={{
           flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
           backgroundColor: "transparent",
           paddingHorizontal: 16,
-          zIndex: 10,
         }}
       >
         <View
           style={{
+            // flex: 1,
             backgroundColor: "#E0F7FA",
-            padding: 24,
             borderRadius: 20,
+            padding: 24,
             elevation: 5,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 3 },
             shadowOpacity: 0.4,
             borderWidth: 4,
-            borderColor: "#00BFFF",
+            borderColor: "#007bff82",
             alignItems: "center",
-            width: "100%",
+            justifyContent: "space-between", // pousse l'image vers le bas
+            marginTop: height * 0.15,
           }}
         >
-          <LottieView
-            source={require("../../assets/lottie/fireworks.json")}
-            autoPlay
-            loop
-            style={{ width: 200, height: 200, marginBottom: 20 }}
-          />
-          <Text
-            style={{
-              fontSize: 36,
-              fontWeight: "bold",
-              color: "#007AFF",
-              marginBottom: 10,
-              textAlign: "center",
-            }}
-          >
-            Well done, friends!
-          </Text>
-          <Text
-            style={{
-              fontSize: 22,
-              marginBottom: 20,
-              color: "#333",
-              textAlign: "center",
-            }}
-          >
-            The match is over!
-          </Text>
+          {/* Partie haute */}
+          <View style={{ alignItems: "center" }}>
+            <Text
+              style={{
+                fontSize: 40,
+                fontWeight: "bold",
+                color: "#ff0b0bff",
+                marginBottom: 10,
+                textAlign: "center",
+                textShadowRadius: 4,
+                letterSpacing: 3,
+              }}
+            >
+              GAME OVER
+            </Text>
 
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-around",
-              alignItems: "center",
-              width: "100%",
-              marginBottom: 10,
-              gap: 40,
-            }}
-          >
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ fontSize: 20, color: "#007AFF" }}>
-                {match.playerOneTeam.title}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 32,
-                  fontWeight: "bold",
-                  color: "#007AFF",
-                  marginTop: 4,
-                }}
-              >
-                {scoreUserOne} 💙
-              </Text>
+            <Text
+              style={{
+                fontSize: 28,
+                fontWeight: "bold",
+                color: "#007AFF",
+                marginBottom: 20,
+                textAlign: "center",
+              }}
+            >
+              {winnerText}
+            </Text>
+
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-around",
+                alignItems: "center",
+                width: "100%",
+                marginBottom: 10,
+                gap: 40,
+              }}
+            >
+              <View style={{ alignItems: "center" }}>
+                <Text style={{ fontSize: 20, color: "#007AFF" }}>
+                  {match.playerOneTeam.title}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 32,
+                    fontWeight: "bold",
+                    color: "#007AFF",
+                    marginTop: 4,
+                  }}
+                >
+                  {scoreUserOne} 💙
+                </Text>
+              </View>
+
+              <View style={{ alignItems: "center" }}>
+                <Text style={{ fontSize: 20, color: "#00BFFF" }}>
+                  {match.playerTwoTeam.title}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 32,
+                    fontWeight: "bold",
+                    color: "#00BFFF",
+                    marginTop: 4,
+                  }}
+                >
+                  {scoreUserTwo} 💙
+                </Text>
+              </View>
             </View>
 
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ fontSize: 20, color: "#00BFFF" }}>
-                {match.playerTwoTeam.title}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 32,
-                  fontWeight: "bold",
-                  color: "#00BFFF",
-                  marginTop: 4,
-                }}
-              >
-                {scoreUserTwo} 💙
-              </Text>
-            </View>
+            <Text
+              style={{
+                fontSize: 20,
+                marginTop: 30,
+                color: "#00796B",
+                fontWeight: "600",
+                textAlign: "center",
+              }}
+            >
+              Thank you for participating in the quiz!
+            </Text>
           </View>
 
-          <Text
+          {/* Image en bas mais dans le bloc */}
+          <Image
+            source={require("../../assets/images/generals/win2.png")}
             style={{
-              fontSize: 20,
-              marginTop: 30,
-              color: "#00796B",
-              fontWeight: "600",
-              textAlign: "center",
+              width: "100%",
+              height: "30%",
+              resizeMode: "contain",
             }}
-          >
-            Thank you for participating in the quiz!{"\n"}
-            {"\n"}🎈
-          </Text>
+          />
         </View>
       </View>
     );

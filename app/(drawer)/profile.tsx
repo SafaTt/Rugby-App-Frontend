@@ -119,9 +119,9 @@ const Profile = () => {
         <View
           style={{
             flex: 1,
-            justifyContent: "center",
             alignItems: "center",
             paddingHorizontal: 20,
+            marginTop: height * 0.25,
           }}
         >
           <Text
