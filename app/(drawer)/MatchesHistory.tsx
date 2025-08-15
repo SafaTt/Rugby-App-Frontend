@@ -152,7 +152,7 @@ const MatchesHistory = () => {
             data={stats.matchHistory}
             keyExtractor={(item) => item.matchId}
             contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
-            style={{ marginTop: height * 0.02 }}
+            style={{ marginTop: height * 0.02, marginBottom: height * 0.1 }}
             renderItem={({ item }) => (
               <View
                 style={{

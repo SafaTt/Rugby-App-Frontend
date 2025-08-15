@@ -34,7 +34,6 @@ const Home = () => {
   const [waitingForPlayer, setWaitingForPlayer] = useState(false);
   const [createdMatchId, setCreatedMatchId] = useState(null);
   const [currentMatchId, setCurrentMatchId] = useState<any | null>();
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showQuestion, setShowQuestion] = useState(false);
   const socketRef = useRef<any>(null);
 
@@ -95,7 +94,6 @@ const Home = () => {
       socket.on("quiz_start", (data: any) => {
         console.log("🔥 Quiz starting!");
         setShowQuestion(true);
-        setCurrentQuestionIndex(0);
         socket.emit("request_current_question", { matchId: data.matchId });
       });
 
@@ -216,7 +214,6 @@ const Home = () => {
 
         if (matchData.isAgainstAI) {
           setShowQuestion(true);
-          setCurrentQuestionIndex(0);
         }
       } else {
         resetToHome("Unable to create match.");

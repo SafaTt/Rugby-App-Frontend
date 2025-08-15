@@ -37,6 +37,29 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
 
   const socket = getSocket();
 
+  // useEffect(() => {
+  //   if (showMatchFinishedUI) {
+  //     const timeout = setTimeout(() => {
+  //       resetMatchState();
+  //     }, 2000);
+
+  //     return () => clearTimeout(timeout);
+  //   }
+  // }, [showMatchFinishedUI]);
+  const resetMatchState = () => {
+    // setSecondsLeft(0);
+    setScoreUserOne(0);
+    setScoreUserTwo(0);
+    setMatchFinished(false);
+    hasEmittedEnd.current = false;
+    setShowMatchFinishedUI(false);
+    setIsPaused(false);
+    setHasPassedHalfTime(false);
+    setHasGoldenPointLaunched(false);
+    setShowGoldenPointBanner(false);
+    setIsGoldenPoint(false);
+  };
+
   useEffect(() => {
     const fetchMatch = async () => {
       const result = await getMatchById(matchId);
@@ -116,7 +139,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   }, [socket, matchId]);
 
   const getInitialSeconds = (duration: string) => {
-    if (duration === "4 MINUTES") return 0.8 * 60;
+    if (duration === "4 MINUTES") return 0.3 * 60;
     if (duration === "6 MINUTES") return 6 * 60;
     if (duration === "10 MINUTES") return 10 * 60;
     return 0;
@@ -208,26 +231,9 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   useEffect(() => {
     if (matchFinished) {
       setShowMatchFinishedUI(true);
-      setIsGoldenPoint(false); // pour restaurer le scoreboard si nécessaire dans un autre écran
+      setIsGoldenPoint(false);
     }
   }, [matchFinished]);
-
-  useEffect(() => {
-    // 🔁 Réinitialisation complète lorsque le match change
-    setMatch(null);
-    setSecondsLeft(0);
-    setScoreUserOne(0);
-    setScoreUserTwo(0);
-    setMatchFinished(false);
-    hasEmittedEnd.current = false;
-    setShowMatchFinishedUI(false);
-    setIsPaused(false);
-    setHasPassedHalfTime(false);
-    setHasGoldenPointLaunched(false);
-    setShowGoldenPointBanner(false);
-    setIsGoldenPoint(false);
-  }, [matchId]);
-
   // ✅ Déplace la condition ici à la fin pour ne pas bloquer les effets
   if (step !== 7 || !match) return null;
 

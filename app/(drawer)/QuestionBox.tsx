@@ -63,8 +63,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
   useEffect(() => {
     const handleMatchFinished = () => {
       setIsMatchFinished(true);
-      setQuestion(null);
-      setIsAnswered(true);
+      resetMatchState();
       setTimeout(() => {
         if (onMatchEnd) onMatchEnd();
       }, 5000);
@@ -159,6 +158,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
         });
         console.log("Match finished due to leave", matchId);
 
+        resetMatchState();
         if (onMatchEnd) onMatchEnd();
       }
     };
@@ -200,8 +200,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       });
 
       setIsMatchFinished(true);
-      setQuestion(null);
-      setIsAnswered(true);
+      resetMatchState();
 
       setTimeout(() => {
         if (onMatchEnd) onMatchEnd();
@@ -305,6 +304,19 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
       return () => clearTimeout(timeout);
     }
   }, [conversionResult]);
+
+  const resetMatchState = () => {
+    setQuestion(null);
+    setIsAnswered(false);
+    setIsGoldenPoint(false);
+    setIsMatchFinished(false);
+    setIsConversion(false);
+    setConversionPlayerId(null);
+    setConversionResult(null);
+    setUserAnswer(null);
+    setCorrectAnswerMessage(null);
+    setShowHalfTime(false);
+  };
 
   if (isMatchFinished || !question) return null;
   const isNotAllowedToAnswer =

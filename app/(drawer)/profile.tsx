@@ -179,12 +179,10 @@ const Profile = () => {
             </Text>
           </View>
 
-          {/* PIE CHART */}
-          {/* PIE CHART */}
           <View
             style={{
               alignItems: "center",
-              marginTop: height * 0.05,
+              marginTop: height * 0.005,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 5 },
               shadowOpacity: 0.25,
@@ -192,9 +190,6 @@ const Profile = () => {
               elevation: 5,
             }}
           >
-            {/* Pie Chart */}
-            {/* <PieChart widthAndHeight={height * 0.25} series={series} /> */}
-
             {/* Stats Summary */}
             <View
               style={{
@@ -289,7 +284,7 @@ const Profile = () => {
             data={teamStats}
             keyExtractor={(item, index) => index.toString()}
             contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 10 }}
-            style={{ marginTop: height * 0.01 }}
+            style={{ marginTop: height * 0.01, marginBottom: height * 0.1}}
             renderItem={({ item }) => (
               <View
                 style={{
