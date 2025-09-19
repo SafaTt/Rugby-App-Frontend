@@ -139,8 +139,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   }, [socket, matchId]);
 
   const getInitialSeconds = (duration: string) => {
-    if (duration === "4 MINUTES") return 0.3 * 60;
-    if (duration === "6 MINUTES") return 6 * 60;
+    if (duration === "4 MINUTES") return 0.1 * 60;
     if (duration === "10 MINUTES") return 10 * 60;
     return 0;
   };
@@ -322,7 +321,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
                     marginTop: 4,
                   }}
                 >
-                  {scoreUserOne} 💙
+                  {scoreUserOne}
                 </Text>
               </View>
 
@@ -338,7 +337,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
                     marginTop: 4,
                   }}
                 >
-                  {scoreUserTwo} 💙
+                  {scoreUserTwo}
                 </Text>
               </View>
             </View>

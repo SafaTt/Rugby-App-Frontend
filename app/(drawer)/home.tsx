@@ -288,7 +288,7 @@ const Home = () => {
   };
   return (
     <ImageBackground
-      style={General_Style.container}
+      style={[General_Style.container,]}
       source={require("../../assets/images/generals/1.png")}
     >
       {step === 0 && (

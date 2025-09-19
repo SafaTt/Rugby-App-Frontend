@@ -346,7 +346,7 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
               textAlign: "center",
             }}
           >
-            CONVERSION ATTEMPT ⚽️
+            CONVERSION ATTEMPT 🏉
           </Text>
           <Text
             style={{
