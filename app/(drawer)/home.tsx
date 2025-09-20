@@ -7,6 +7,7 @@ import {
   findFirstPendingMatch,
   joinMatch,
 } from "@/services/matchService";
+import { getRandomTeam } from "@/utils/getRandomTeam";
 import { initializeSocket } from "@/utils/socket";
 import { Image, ImageBackground } from "expo-image";
 import { router, useNavigation } from "expo-router";
@@ -192,12 +193,25 @@ const Home = () => {
       // Cas IA : currentPlayer === 1
       if (currentPlayer === 1) {
         matchData.isAgainstAI = true;
-        matchData.playerTwoTeam = {
-          title: "AI Bot",
-          color: "#888888",
-          textColor: "#000000",
-          isAI: true,
-        };
+
+        const aiTeam = getRandomTeam(teamSelected, competition);
+
+        if (aiTeam) {
+          matchData.playerTwoTeam = {
+            title: `${aiTeam.title} 🤖`,
+            color: aiTeam.color,
+            textColor: aiTeam.textColor,
+            isAI: true,
+          };
+        } else {
+          // fallback au cas où getRandomTeam retourne null
+          matchData.playerTwoTeam = {
+            title: "AI Bot",
+            color: "#888888",
+            textColor: "#000000",
+            isAI: true,
+          };
+        }
       }
 
       const result = await createMatch(matchData);
@@ -288,7 +302,7 @@ const Home = () => {
   };
   return (
     <ImageBackground
-      style={[General_Style.container,]}
+      style={[General_Style.container]}
       source={require("../../assets/images/generals/1.png")}
     >
       {step === 0 && (
