@@ -1,1 +1,1 @@
-export const PUBLIC_URI = "http://192.168.1.9:5000";
+export const PUBLIC_URI = "https://rugby-app-backend-9.onrender.com";

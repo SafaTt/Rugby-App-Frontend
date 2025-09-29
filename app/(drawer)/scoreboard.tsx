@@ -8,6 +8,7 @@ import { getSocket } from "@/utils/socket";
 import { Image } from "expo-image";
 import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, Text, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 const { width, height } = Dimensions.get("window");
 
@@ -37,17 +38,8 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
 
   const socket = getSocket();
 
-  // useEffect(() => {
-  //   if (showMatchFinishedUI) {
-  //     const timeout = setTimeout(() => {
-  //       resetMatchState();
-  //     }, 2000);
-
-  //     return () => clearTimeout(timeout);
-  //   }
-  // }, [showMatchFinishedUI]);
   const resetMatchState = () => {
-    // setSecondsLeft(0);
+    setSecondsLeft(getInitialSeconds(match?.duration || "0 MINUTES"));
     setScoreUserOne(0);
     setScoreUserTwo(0);
     setMatchFinished(false);
@@ -59,6 +51,39 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
     setShowGoldenPointBanner(false);
     setIsGoldenPoint(false);
   };
+
+  const handleMatchFinished = () => {
+    setMatchFinished(true);
+    resetMatchState(); // reset complet des états
+
+    // déclenche callback après quelques secondes si fourni
+    setTimeout(() => {
+      if (onMatchEnd) onMatchEnd();
+    }, 4000);
+  };
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleAbandon = (data: any) => {
+      if (data.matchId === matchId) {
+        Toast.show({
+          type: "info",
+          text1: "Match over",
+          text2: "A player left the match.",
+        });
+        resetMatchState();
+        if (onMatchEnd) onMatchEnd();
+      }
+    };
+    socket.on("match_finished", handleMatchFinished);
+    socket.on("match_finished_due_to_leave", handleAbandon);
+
+    return () => {
+      socket.off("match_finished", handleMatchFinished);
+      socket.off("match_finished_due_to_leave", handleAbandon);
+    };
+  }, [socket]);
 
   useEffect(() => {
     const fetchMatch = async () => {

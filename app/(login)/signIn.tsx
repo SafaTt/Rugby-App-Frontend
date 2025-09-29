@@ -68,7 +68,7 @@ const SignIn = () => {
 
   return (
     <View style={General_Style.container}>
-      <StatusBar style="dark" translucent />
+      <StatusBar style="light" translucent />
       <View style={General_Style.dataViewAuth}>
         <View style={{ alignSelf: "flex-start" }}>
           <Image

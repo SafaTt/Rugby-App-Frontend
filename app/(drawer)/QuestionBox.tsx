@@ -316,6 +316,9 @@ const QuestionBox: React.FC<Props> = ({ matchId, onMatchEnd }) => {
     setUserAnswer(null);
     setCorrectAnswerMessage(null);
     setShowHalfTime(false);
+
+    // ⚡ Reset refs si nécessaire
+    userIdRef.current = userId; // reste le même
   };
 
   if (isMatchFinished || !question) return null;
