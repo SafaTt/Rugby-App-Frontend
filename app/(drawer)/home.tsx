@@ -37,6 +37,7 @@ const Home = () => {
   const [currentMatchId, setCurrentMatchId] = useState<any | null>();
   const [showQuestion, setShowQuestion] = useState(false);
   const socketRef = useRef<any>(null);
+  const [matchIdentification, setMatchIdentification] = useState();
 
   useEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -95,6 +96,7 @@ const Home = () => {
       socket.on("quiz_start", (data: any) => {
         console.log("🔥 Quiz starting!");
         setShowQuestion(true);
+        setMatchIdentification(data.matchId);
         socket.emit("request_current_question", { matchId: data.matchId });
       });
 
@@ -768,6 +770,7 @@ const Home = () => {
           ) : (
             <View>
               <Scoreboard
+                // key={matchIdentification}
                 step={step}
                 matchId={currentMatchId}
                 onMatchEnd={handleMatchEnd}

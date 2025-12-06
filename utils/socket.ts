@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
 let socket: any;
 export const initializeSocket = async () => {
   const token = await AsyncStorage.getItem("token");
-  socket = io("https://rugby-app-backend-9.onrender.com", {
+  socket = io("http://192.168.1.13:5000", {
     auth: { token },
     transports: ["websocket"],
   });

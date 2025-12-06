@@ -10,7 +10,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Dimensions, Text, View } from "react-native";
 import Toast from "react-native-toast-message";
 
-const { width, height } = Dimensions.get("window");
+const { height } = Dimensions.get("window");
 
 interface ScoreboardProps {
   step: number;
@@ -54,13 +54,23 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
 
   const handleMatchFinished = () => {
     setMatchFinished(true);
-    resetMatchState(); // reset complet des états
+    setShowMatchFinishedUI(true);
 
-    // déclenche callback après quelques secondes si fourni
+    // Masquer l'écran après 3 sec
     setTimeout(() => {
+      setShowMatchFinishedUI(false);
+
+      // Reset complet avant redirection
+      resetMatchState();
+
+      // Redirection vers le Home
       if (onMatchEnd) onMatchEnd();
-    }, 4000);
+    }, 3000);
   };
+
+  useEffect(() => {
+    resetMatchState();
+  }, [matchId]);
 
   useEffect(() => {
     if (!socket) return;
@@ -109,10 +119,20 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
     const fetchScores = async () => {
       try {
         const scores = await fetchMatchScores(matchId);
-        setScoreUserOne(scores.scoreUserOne);
-        setScoreUserTwo(scores.scoreUserTwo);
+
+        // Si le backend renvoie null ou vide → match tout juste créé
+        if (!scores) {
+          setScoreUserOne(0);
+          setScoreUserTwo(0);
+          return;
+        }
+
+        setScoreUserOne(scores.scoreUserOne ?? 0);
+        setScoreUserTwo(scores.scoreUserTwo ?? 0);
       } catch (error) {
-        console.error("Erreur récupération scores initiaux:", error);
+        console.log("⚠️ Scores non initialisés, on les met à zéro.");
+        setScoreUserOne(0);
+        setScoreUserTwo(0);
       }
     };
 
@@ -164,7 +184,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
   }, [socket, matchId]);
 
   const getInitialSeconds = (duration: string) => {
-    if (duration === "4 MINUTES") return 4 * 60;
+    if (duration === "4 MINUTES") return 0.8 * 60;
     if (duration === "6 MINUTES") return 6 * 60;
     if (duration === "10 MINUTES") return 10 * 60;
     return 0;
@@ -240,12 +260,6 @@ const Scoreboard: React.FC<ScoreboardProps> = ({
       return () => clearInterval(interval);
     }
   }, [step, secondsLeft, isPaused, match?.duration, hasPassedHalfTime]);
-
-  useEffect(() => {
-    if (matchFinished) {
-      setShowMatchFinishedUI(true);
-    }
-  }, [matchFinished]);
 
   const formatTime = (secs: number) => {
     const minutes = Math.floor(secs / 60);
